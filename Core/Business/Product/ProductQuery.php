@@ -24,7 +24,7 @@ class ProductQuery implements ProductQueryInterface
         $this->operator = $operator;
     }
 
-    public function addFilter(Filter $filter)
+    public function addFilter(ProductQueryInterface $filter)
     {
         $this->filters[] = $filter;
         return $this;
