@@ -28,4 +28,6 @@ abstract class AbstractProductFilter implements ProductQueryInterface
     {
         return null;
     }
+
+    abstract public function toJSON();
 }

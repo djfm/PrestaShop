@@ -2,10 +2,10 @@
 
 use PrestaShop\PrestaShop\Core\Business\Product\ProductListerInterface;
 use PrestaShop\PrestaShop\Core\Business\Product\ProductQueryContext;
-use PrestaShop\PrestaShop\Core\Business\Product\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\ProductQuery;
-use PrestaShop\PrestaShop\Core\Business\Product\ProductQueryResult;
+use PrestaShop\PrestaShop\Core\Business\Product\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Filter\CategoryFilter;
+use PrestaShop\PrestaShop\Core\Business\Product\ProductQueryResult;
 
 class Adapter_ProductLister implements ProductListerInterface
 {
@@ -62,6 +62,8 @@ class Adapter_ProductLister implements ProductListerInterface
         $relatedEntities = $this->getRelatedEntities($query);
 
         $sql = 'prefix_product product';
+
+        $sql .= ' INNER JOIN prefix_product_lang product_lang ON product_lang.id_product = product.id_product AND product_lang.id_lang = ' . (int)$context->getLanguageId() . ' AND product_lang.id_shop = ' . (int)$context->getShopId();
 
         foreach ($relatedEntities as $entity) {
             switch ($entity) {
@@ -127,13 +129,37 @@ class Adapter_ProductLister implements ProductListerInterface
         return $query;
     }
 
+    private function addMissingProductInformation(ProductQueryContext $context, array $products)
+    {
+        $nb_days_new_product = Configuration::get('PS_NB_DAYS_NEW_PRODUCT');
+        if (!Validate::isUnsignedInt($nb_days_new_product)) {
+            $nb_days_new_product = 20;
+        }
+
+        return array_map(function (array $product) use ($context, $nb_days_new_product){
+            if (empty($product['id_product_attribute'])) {
+                $product['id_product_attribute'] = 0;
+            }
+
+            if (!array_key_exists('new', $product)) {
+                $productAge = round((time() - strtotime($product['date_add'])) / 24 / 3600);
+                $product['new'] = $productAge < $nb_days_new_product;
+            }
+
+            return Product::getProductProperties(
+                $context->getLanguageId(),
+                $product
+            );
+        }, $products);
+    }
+
     public function listProducts(ProductQueryContext $context, ProductQuery $query, PaginationQuery $pagination)
     {
         $queryParts = $this->buildQueryParts($context, $query, $pagination);
-        $queryParts['select'] = 'product.*';
+        $queryParts['select'] = 'product.*, product_lang.*';
         $sql = $this->assembleQueryParts($queryParts);
 
-        $products = Db::getInstance()->executeS($sql);
+        $products = $this->addMissingProductInformation($context, Db::getInstance()->executeS($sql));
 
         $result = new ProductQueryResult;
         $result->setProducts($products);

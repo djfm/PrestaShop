@@ -2,6 +2,7 @@
 
 use PrestaShop\PrestaShop\Core\Business\Product\ProductPresenter;
 use PrestaShop\PrestaShop\Core\Business\Product\ProductPresentationSettings;
+use PrestaShop\PrestaShop\Core\Business\Product\ProductQueryContext;
 
 abstract class ProductPresentingFrontControllerCore extends FrontController
 {
@@ -29,5 +30,18 @@ abstract class ProductPresentingFrontControllerCore extends FrontController
             new Adapter_ProductColorsRetriever,
             new Adapter_Translator
         );
+    }
+
+    protected function getProductLister()
+    {
+        return Adapter_ServiceLocator::get('PrestaShop\PrestaShop\Core\Business\Product\ProductLister');
+    }
+
+    protected function getProductQueryContext()
+    {
+        return (new ProductQueryContext())
+            ->setLanguageId($this->context->language->id)
+            ->setShopId($this->context->shop->id)
+        ;
     }
 }

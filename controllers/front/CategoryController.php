@@ -24,6 +24,10 @@
  * International Registered Trademark & Property of PrestaShop SA
  */
 
+use PrestaShop\PrestaShop\Core\Business\Product\ProductQuery;
+use PrestaShop\PrestaShop\Core\Business\Product\PaginationQuery;
+use PrestaShop\PrestaShop\Core\Business\Product\Filter\CategoryFilter;
+
 class CategoryControllerCore extends ProductPresentingFrontControllerCore
 {
     /** string Internal controller name */
@@ -165,6 +169,7 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
             'category'             => $category,
             'description_short'    => Tools::truncateString($this->category->description, 350),
             'products'             => $products,
+            'query'                => $this->query,
             'id_category'          => (int)$this->category->id,
             'id_category_parent'   => (int)$this->category->id_parent,
             'return_category_name' => Tools::safeOutput($this->category->name),
@@ -285,32 +290,31 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
      */
     public function assignProductList()
     {
-        $hook_executed = false;
-        Hook::exec('actionProductListOverride', array(
-            'nbProducts'   => &$this->nbProducts,
-            'catProducts'  => &$this->cat_products,
-            'hookExecuted' => &$hook_executed,
-        ));
+        $pagination = new PaginationQuery;
 
-        // The hook was not executed, standard working
-        if (!$hook_executed) {
-            $this->context->smarty->assign('categoryNameComplement', '');
-            $this->nbProducts = $this->category->getProducts(null, null, null, $this->orderBy, $this->orderWay, true);
-            $this->pagination((int)$this->nbProducts); // Pagination must be call after "getProducts"
-            $this->cat_products = $this->category->getProducts($this->context->language->id, (int)$this->p, (int)$this->n, $this->orderBy, $this->orderWay);
-        }
-        // Hook executed, use the override
-        else {
-            // Pagination must be call after "getProducts"
-            $this->pagination($this->nbProducts);
-        }
+        $query = (new ProductQuery('and'))
+            ->addFilter(
+                (new CategoryFilter())
+                ->setCategoryId(Tools::getValue('id_category'))
+                ->setEnabled(true)
+            )
+        ;
+
+        $queryContext = $this->getProductQueryContext();
+
+        $result = $this->getProductLister()->listProducts(
+            $queryContext,
+            $query,
+            $pagination
+        );
+
+        $this->cat_products = $result->getProducts();
+        $this->query = (new Adapter_ProductFilterPresenter())->present(
+            $queryContext,
+            $result->getUpdatedFilters()
+        );
 
         $this->addColorsToProductList($this->cat_products);
-
-        Hook::exec('actionProductListModifier', array(
-            'nb_products'  => &$this->nbProducts,
-            'cat_products' => &$this->cat_products,
-        ));
 
         foreach ($this->cat_products as &$product) {
             if (isset($product['id_product_attribute']) && $product['id_product_attribute'] && isset($product['product_attribute_minimal_quantity'])) {

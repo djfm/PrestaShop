@@ -28,6 +28,10 @@
         <section id="products">
           <h1>{l s='Products'}</h1>
 
+          {block name="filters"}
+            {include './_partials/query-navigation.tpl' query=$query}
+          {/block}
+
           {block name="sort_by"}
             {include './_partials/sort-by.tpl' options=$sort_options}
           {/block}

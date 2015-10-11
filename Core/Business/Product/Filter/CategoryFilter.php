@@ -19,4 +19,12 @@ class CategoryFilter extends AbstractProductFilter
     {
         return $this->categoryId;
     }
+
+    public function toJSON()
+    {
+        return json_encode([
+            'categoryId' => $this->getCategoryId(),
+            'className'  => 'CategoryFilter'
+        ]);
+    }
 }
