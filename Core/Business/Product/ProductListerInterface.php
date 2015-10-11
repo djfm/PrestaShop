@@ -6,6 +6,7 @@ interface ProductListerInterface
 {
     /**
      * Well, it lists products.
+     * @param  ProductQueryContext $context Holds general query settings, such as shop, language and customer group
      * @param  ProductQuery    $query
      * @param  PaginationQuery $pagination
      * @return ProductQueryResult or `null`, where:
@@ -15,5 +16,5 @@ interface ProductListerInterface
      *                        a ProductQueryResult with no products, it means
      *                        something else should be asked for the result.
      */
-    public function listProducts(ProductQuery $query, PaginationQuery $pagination);
+    public function listProducts(ProductQueryContext $context, ProductQuery $query, PaginationQuery $pagination);
 }
