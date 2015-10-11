@@ -2,7 +2,9 @@
 
 namespace PrestaShop\PrestaShop\Core\Business\Product\Filter;
 
-abstract class AbstractProductFilter implements ProductFilterInterface
+use PrestaShop\PrestaShop\Core\Business\Product\ProductQueryInterface;
+
+abstract class AbstractProductFilter implements ProductQueryInterface
 {
     private $enabled;
 

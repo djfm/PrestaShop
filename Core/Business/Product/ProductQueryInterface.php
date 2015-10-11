@@ -2,7 +2,7 @@
 
 namespace PrestaShop\PrestaShop\Core\Business\Product\Filter;
 
-interface ProductFilterInterface
+interface ProductQueryInterface
 {
     public function getFilters();
     public function getOperator();

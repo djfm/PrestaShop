@@ -2,9 +2,7 @@
 
 namespace PrestaShop\PrestaShop\Core\Business\Product;
 
-use PrestaShop\PrestaShop\Core\Business\Product\Filter\ProductFilterInterface;
-
-class ProductQuery implements ProductFilterInterface
+class ProductQuery implements ProductQueryInterface
 {
     const OPERATOR_OR = "or";
     const OPERATOR_AND = "and";
