@@ -74,6 +74,7 @@ class Adapter_ProductLister implements ProductListerInterface
             'from'      => $this->buildQueryFrom($context, $query, $pagination),
             'where'     => $this->buildQueryWhere($context, $query, $pagination),
             'groupBy'   => '',
+            'orderBy'   => ''
         ];
     }
 
@@ -86,20 +87,10 @@ class Adapter_ProductLister implements ProductListerInterface
         if ($queryParts['groupBy']) {
             $sql .= " GROUP BY {$queryParts['groupBy']}";
         }
-        return $this->addDbPrefix($sql);
-    }
-
-    private function isCategoryFilterEnabled(Query $query, $categoryId)
-    {
-        foreach ($query->getFacets() as $facet) {
-            foreach ($facet->getFilters() as $filter) {
-                if ($filter instanceof CategoryFilter && $filter->getCategoryId() === $categoryId) {
-                    return true;
-                }
-            }
+        if ($queryParts['orderBy']) {
+            $sql .= " ORDER BY {$queryParts['orderBy']}";
         }
-
-        return false;
+        return $this->addDbPrefix($sql);
     }
 
     private function buildUpdatedFilters(
@@ -125,27 +116,40 @@ class Adapter_ProductLister implements ProductListerInterface
                                                     AND (other_category.level_depth - category.level_depth <= 1)'
                                         ;
                 $queryParts['groupBy']  = 'other_categories.id_category';
+                $queryParts['orderBy']  = 'other_category.level_depth ASC';
 
                 $sql = $this->assembleQueryParts($queryParts);
 
                 $categoryIds = Db::getInstance()->executeS($sql);
 
-                $facet = new Facet;
+                $parentCategoryFacet = new Facet;
+                $parentCategoryFacet
+                    ->setName('Category')
+                    ->addFilter(
+                        new CategoryFilter(
+                            (int)array_shift($categoryIds)['id_category'],
+                            true
+                        )
+                    )
+                ;
+
+                $childrenCategoriesFacet = new Facet;
+                $childrenCategoriesFacet->setName('Category');
 
                 foreach ($categoryIds as $row) {
                     $categoryId = (int)$row['id_category'];
-
-
-                    $facet->setName('Category');
-                    $facet->addFilter(
+                    $childrenCategoriesFacet->addFilter(
                         new CategoryFilter(
                             $categoryId,
-                            $this->isCategoryFilterEnabled($query, $categoryId)
+                            false
                         )
                     );
                 }
 
-                $updatedFilters->addFacet($facet);
+                $updatedFilters
+                    ->addFacet($parentCategoryFacet)
+                    ->addFacet($childrenCategoriesFacet)
+                ;
             }
         }
         return $updatedFilters;

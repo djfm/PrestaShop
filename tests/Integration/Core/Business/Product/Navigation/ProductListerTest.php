@@ -61,15 +61,24 @@ class ProductListerTest extends IntegrationTestCase
         $result = $this->lister->listProducts($this->context, $query, $this->pagination);
 
         $expectedUpdatedFilters = new Query;
-        $categoryFacet = new Facet;
-        $categoryFacet
+
+        $parentCategoryFacet = new Facet;
+        $parentCategoryFacet
+            ->setName('Category')
             ->addFilter(new CategoryFilter(3, true))    // "Women"   , enabled
+        ;
+
+        $childrenCategoriesFacet = new Facet;
+        $childrenCategoriesFacet
+            ->setName('Category')
             ->addFilter(new CategoryFilter(4, false))   // "Tops"    , disabled
             ->addFilter(new CategoryFilter(8, false))   // "Dresses" , disabled
         ;
 
-        $categoryFacet->setName('Category');
-        $expectedUpdatedFilters->addFacet($categoryFacet);
+        $expectedUpdatedFilters
+            ->addFacet($parentCategoryFacet)
+            ->addFacet($childrenCategoriesFacet)
+        ;
 
         $this->assertEquals($expectedUpdatedFilters, $result->getUpdatedFilters());
     }
