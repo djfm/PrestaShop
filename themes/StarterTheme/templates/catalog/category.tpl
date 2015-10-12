@@ -29,7 +29,7 @@
           <h1>{l s='Products'}</h1>
 
           {block name="filters"}
-            {include './_partials/query-navigation.tpl' query=$query}
+            {include './_partials/navigation.tpl' query=$query}
           {/block}
 
           {block name="sort_by"}

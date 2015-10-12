@@ -2,7 +2,7 @@
 
 use PrestaShop\PrestaShop\Core\Business\Product\ProductPresenter;
 use PrestaShop\PrestaShop\Core\Business\Product\ProductPresentationSettings;
-use PrestaShop\PrestaShop\Core\Business\Product\ProductQueryContext;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryContext;
 
 abstract class ProductPresentingFrontControllerCore extends FrontController
 {
@@ -34,12 +34,12 @@ abstract class ProductPresentingFrontControllerCore extends FrontController
 
     protected function getProductLister()
     {
-        return Adapter_ServiceLocator::get('PrestaShop\PrestaShop\Core\Business\Product\ProductLister');
+        return Adapter_ServiceLocator::get('PrestaShop\PrestaShop\Core\Business\Product\Navigation\ProductLister');
     }
 
     protected function getProductQueryContext()
     {
-        return (new ProductQueryContext())
+        return (new QueryContext())
             ->setLanguageId($this->context->language->id)
             ->setShopId($this->context->shop->id)
         ;

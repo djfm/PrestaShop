@@ -1,6 +1,6 @@
 <?php
 
-namespace PrestaShop\PrestaShop\Core\Business\Product;
+namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation;
 
 interface ProductListerInterface
 {
@@ -16,5 +16,5 @@ interface ProductListerInterface
      *                        a ProductQueryResult with no products, it means
      *                        something else should be asked for the result.
      */
-    public function listProducts(ProductQueryContext $context, ProductQuery $query, PaginationQuery $pagination);
+    public function listProducts(QueryContext $context, Query $query, PaginationQuery $pagination);
 }

@@ -1,17 +1,15 @@
-{if $query.type == null}
-  {foreach from=$query.facets item="facet"}
-    {include './query.tpl' query=$facet}
-  {/foreach}
-{else}
-  <div>
-    {if $query.type == 'CategoryFilter'}
-      <p>{l s='Category'}</p>
-    {else}
-      {* StarterTheme TODO: We definitely need a better way to manage translations, don't want to worry about it for the POC *}
-      <p>{l s='Filter'}</p>
-    {/if}
-    {foreach from=$query.choices item="choice"}
-      <label><input name="{$choice.name|escape:'javascript'}" value="{$choice.value|escape:'javascript'}" type="checkbox" {if $choice.enabled}checked{/if}> {$choice.label}</label>
+{foreach from=$query item="facet"}
+  <section class="facet">
+    <h1 class="h2">{$facet.name}</h1>
+    {foreach from=$facet.filters item="filter"}
+      <label>
+        <input
+          type  = "checkbox"
+          name  = "{$filter.inputName nofilter}"
+          value = {$filter.inputValue nofilter}
+          {if $filter.enabled} checked {/if}
+        > {$filter.label}
+      </label>
     {/foreach}
-  </div>
-{/if}
+  </section>
+{/foreach}

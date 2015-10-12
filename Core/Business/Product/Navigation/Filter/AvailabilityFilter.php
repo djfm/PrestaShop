@@ -1,6 +1,6 @@
 <?php
 
-namespace PrestaShop\PrestaShop\Core\Business\Product\Filter;
+namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter;
 
 class AvailabilityFilter extends AbstractProductFilter
 {

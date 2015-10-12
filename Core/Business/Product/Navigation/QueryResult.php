@@ -1,8 +1,8 @@
 <?php
 
-namespace PrestaShop\PrestaShop\Core\Business\Product;
+namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation;
 
-class ProductQueryResult
+class QueryResult
 {
     /**
      * The products found.
@@ -61,7 +61,7 @@ class ProductQueryResult
         return $this->page;
     }
 
-    public function setUpdatedFilters(ProductQuery $updatedFilters)
+    public function setUpdatedFilters(Query $updatedFilters)
     {
         $this->updatedFilters = $updatedFilters;
         return $this;

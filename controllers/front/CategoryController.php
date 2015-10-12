@@ -24,9 +24,10 @@
  * International Registered Trademark & Property of PrestaShop SA
  */
 
-use PrestaShop\PrestaShop\Core\Business\Product\ProductQuery;
-use PrestaShop\PrestaShop\Core\Business\Product\PaginationQuery;
-use PrestaShop\PrestaShop\Core\Business\Product\Filter\CategoryFilter;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
 
 class CategoryControllerCore extends ProductPresentingFrontControllerCore
 {
@@ -291,14 +292,35 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
     public function assignProductList()
     {
         $pagination = new PaginationQuery;
+        $query = new Query;
 
-        $query = (new ProductQuery('and'))
-            ->addFilter(
-                (new CategoryFilter())
-                ->setCategoryId(Tools::getValue('id_category'))
-                ->setEnabled(true)
-            )
-        ;
+        if (($rawQuery = Tools::getValue('query'))) {
+            foreach ($rawQuery as $rawFacet) {
+                $facet = new Facet;
+                foreach ($rawFacet as $filterAsJSON) {
+                    $filterAsArray = json_decode($filterAsJSON, true);
+                    $namespace = "PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\\";
+                    $className = $namespace . $filterAsArray['filterType'];
+                    $filter  = new $className;
+                    $filter->setEnabled($filterAsArray['enabled']);
+                    $filter->unserializeCriterium($filterAsArray['criterium']);
+                    $facet->addFilter($filter);
+                }
+                $query->addFacet($facet);
+            }
+        } else {
+            $facet = new Facet;
+
+            $facet->addFilter(
+                new CategoryFilter(
+                    (int)Tools::getValue('id_category'),
+                    true // enabled
+                )
+            );
+            $query->addFacet($facet);
+        }
+
+
 
         $queryContext = $this->getProductQueryContext();
 
@@ -309,7 +331,7 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         );
 
         $this->cat_products = $result->getProducts();
-        $this->query = (new Adapter_ProductFilterPresenter())->present(
+        $this->query = (new Adapter_ProductQueryPresenter())->present(
             $queryContext,
             $result->getUpdatedFilters()
         );
