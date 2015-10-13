@@ -1,4 +1,5 @@
-{foreach from=$query item="facet"}
+{foreach from=$query item="facet" key="facetIndex"}
+  <input type="hidden" name="facets[{$facetIndex}][identifier]" value="{$facet.identifier}">
   <section class="facet">
     <h1 class="h2">{$facet.name}</h1>
     {foreach from=$facet.filters item="filter"}

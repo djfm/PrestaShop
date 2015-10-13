@@ -295,14 +295,16 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         $query = new Query;
 
         if (($rawQuery = Tools::getValue('query'))) {
-            foreach ($rawQuery as $rawFacet) {
+            $facetsArray = Tools::getValue('facets');
+            foreach ($rawQuery as $f => $rawFacet) {
                 $facet = new Facet;
+                $facet->setIdentifier($facetsArray[$f]['identifier']);
                 foreach ($rawFacet as $filterAsJSON) {
                     $filterAsArray = json_decode($filterAsJSON, true);
                     $namespace = "PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\\";
                     $className = $namespace . $filterAsArray['filterType'];
                     $filter  = new $className;
-                    $filter->setEnabled($filterAsArray['enabled']);
+                    $filter->setEnabled(true);
                     $filter->unserializeCriterium($filterAsArray['criterium']);
                     $facet->addFilter($filter);
                 }
@@ -311,10 +313,12 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         } else {
             $facet = new Facet;
 
-            $facet->addFilter(
-                new CategoryFilter(
-                    (int)Tools::getValue('id_category'),
-                    true // enabled
+            $facet
+                ->setIdentifier('parentCategory')
+                ->addFilter(
+                    new CategoryFilter(
+                        (int)Tools::getValue('id_category'),
+                        true // enabled
                 )
             );
             $query->addFacet($facet);

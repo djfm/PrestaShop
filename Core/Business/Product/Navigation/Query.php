@@ -16,4 +16,14 @@ class Query
     {
         return $this->facets;
     }
+
+    public function getFacetByIdentifier($identifier)
+    {
+        foreach ($this->getFacets() as $facet) {
+            if ($facet->getIdentifier() === $identifier) {
+                return $facet;
+            }
+        }
+        return null;
+    }
 }

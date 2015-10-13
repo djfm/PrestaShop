@@ -16,21 +16,30 @@ class Adapter_ProductLister implements ProductListerInterface
         return str_replace('prefix_', _DB_PREFIX_, $sql);
     }
 
-    private function getDataDomains(Query $query)
+    private function getFacetDataDomains(Facet $facet)
     {
-        $domains = [];
-        foreach ($query->getFacets() as $facet) {
-            foreach ($facet->getFilters() as $filter) {
-                $domains[$filter->getDataDomain()] = true;
-            }
-        }
-        return array_keys($domains);
+        return array_unique(array_map(function (AbstractProductFilter $filter) {
+            return $filter->getDataDomain();
+        }, $facet->getFilters()));
     }
 
-    private function filterToSQL(AbstractProductFilter $filter)
+    private function getQueryDataDomains(Query $query)
+    {
+        return array_unique(
+            call_user_func_array(
+                'array_merge',
+                array_map(
+                    [$this, 'getFacetDataDomains'],
+                    $query->getFacets()
+                )
+            )
+        );
+    }
+
+    private function filterToSQL(AbstractProductFilter $filter, $facetIndex)
     {
         if ($filter instanceof CategoryFilter) {
-            return 'category_product.id_category = ' . (int)$filter->getCategoryId();
+            return "category_product{$facetIndex}.id_category = " . (int)$filter->getCategoryId();
         } else {
             throw new Exception(
                 sprintf(
@@ -43,9 +52,13 @@ class Adapter_ProductLister implements ProductListerInterface
 
     private function buildQueryWhere(QueryContext $context, Query $query)
     {
-        return implode(' AND ', array_map(function (Facet $facet) {
-            return '(' . implode(' OR ', array_map([$this, 'filterToSQL'], $facet->getFilters())) . ')';
-        }, $query->getFacets()));
+        $cumulativeConditions = [];
+        foreach ($query->getFacets() as $i => $facet) {
+            $cumulativeConditions[] = '(' . implode(' OR ', array_map(function (AbstractProductFilter $filter) use ($i) {
+                return $this->filterToSQL($filter, $i);
+            }, $facet->getFilters())) . ')';
+        }
+        return implode(' AND ', $cumulativeConditions);
     }
 
     private function buildQueryFrom(QueryContext $context, Query $query, PaginationQuery $pagination)
@@ -54,10 +67,16 @@ class Adapter_ProductLister implements ProductListerInterface
 
         $sql .= ' INNER JOIN prefix_product_lang product_lang ON product_lang.id_product = product.id_product AND product_lang.id_lang = ' . (int)$context->getLanguageId() . ' AND product_lang.id_shop = ' . (int)$context->getShopId();
 
-        foreach ($this->getDataDomains($query) as $domain) {
-            switch ($domain) {
-                case 'categories':
-                    $sql .= ' INNER JOIN prefix_category_product category_product ON category_product.id_product = product.id_product INNER JOIN prefix_category_shop category_shop ON category_shop.id_category = category_product.id_category AND category_shop.id_shop = ' . (int)$context->getShopId();
+        foreach ($query->getFacets() as $i => $facet) {
+            foreach ($this->getFacetDataDomains($facet) as $domain) {
+                switch ($domain) {
+                    case 'categories':
+                        $sql .= " INNER JOIN prefix_category_product category_product{$i}
+                                    ON category_product{$i}.id_product = product.id_product
+                                  INNER JOIN prefix_category_shop category_shop{$i}
+                                    ON category_shop{$i}.id_category = category_product{$i}.id_category
+                                        AND category_shop{$i}.id_shop = " . (int)$context->getShopId();
+                }
             }
         }
 
@@ -93,66 +112,120 @@ class Adapter_ProductLister implements ProductListerInterface
         return $this->addDbPrefix($sql);
     }
 
+    private function getTopLevelCategoryId(Query $query)
+    {
+        $minDepth   = null;
+        $categoryId = null;
+
+        foreach ($query->getFacets() as $facet) {
+            foreach ($facet->getFilters() as $filter) {
+                if ($filter instanceof CategoryFilter) {
+                    $id = (int)$filter->getCategoryId();
+                    $depth = (int)Db::getInstance()->getValue(
+                        $this->addDbPrefix("SELECT level_depth FROM prefix_category WHERE id_category = $id")
+                    );
+                    if ($minDepth === null || $depth < $minDepth) {
+                        $minDepth = $depth;
+                        $categoryId = $id;
+                    }
+                }
+            }
+        }
+
+        return $categoryId;
+    }
+
     private function buildUpdatedFilters(
         QueryContext $context,
         Query $query,
         PaginationQuery $pagination
     ) {
         $updatedFilters = new Query;
-        foreach ($this->getDataDomains($query) as $domain) {
-            if ($domain === 'categories') {
+        $queryParts = $this->buildQueryParts($context, $query, $pagination);
 
-                $queryParts = $this->buildQueryParts($context, $query, $pagination);
+        $topLevelCategoryId = $this->getTopLevelCategoryId($query);
 
-                $queryParts['select']   = 'other_categories.id_category';
-                $queryParts['from']    .= ' INNER JOIN prefix_category category
-                                                ON category.id_category = category_product.id_category
-                                            INNER JOIN prefix_category_product other_categories
-                                                ON other_categories.id_product = product.id_product
-                                            INNER JOIN prefix_category other_category
-                                                ON other_category.id_category = other_categories.id_category
-                                                    AND other_category.nleft  >= category.nleft
-                                                    AND other_category.nright <= category.nright
-                                                    AND (other_category.level_depth - category.level_depth <= 1)'
-                                        ;
-                $queryParts['groupBy']  = 'other_categories.id_category';
-                $queryParts['orderBy']  = 'other_category.level_depth ASC';
+        $queryParts['select']   = 'other_categories.id_category';
+        $queryParts['from']    .= ' INNER JOIN prefix_category category ON category.id_category = ' . (int)$topLevelCategoryId . '
+                                    INNER JOIN prefix_category_product other_categories
+                                        ON other_categories.id_product = product.id_product
+                                    INNER JOIN prefix_category_shop category_shop
+                                      ON category_shop.id_category = other_categories.id_category
+                                        AND category_shop.id_shop = ' . (int)$context->getShopId() . '
+                                    INNER JOIN prefix_category other_category
+                                        ON other_category.id_category = other_categories.id_category
+                                            AND other_category.nleft  >= category.nleft
+                                            AND other_category.nright <= category.nright
+                                            AND (other_category.level_depth - category.level_depth <= 1)'
+                                ;
+        $queryParts['groupBy']  = 'other_categories.id_category';
+        $queryParts['orderBy']  = 'other_category.level_depth ASC, other_category.nleft ASC';
 
-                $sql = $this->assembleQueryParts($queryParts);
+        $sql = $this->assembleQueryParts($queryParts);
 
-                $categoryIds = Db::getInstance()->executeS($sql);
+        $categoryIds = Db::getInstance()->executeS($sql);
 
-                $parentCategoryFacet = new Facet;
-                $parentCategoryFacet
-                    ->setName('Category')
-                    ->addFilter(
-                        new CategoryFilter(
-                            (int)array_shift($categoryIds)['id_category'],
-                            true
-                        )
-                    )
-                ;
+        $parentCategoryFacet = new Facet;
+        $parentCategoryFacet
+            ->setName('Category')
+            ->setIdentifier('parentCategory')
+            ->addFilter(
+                new CategoryFilter(
+                    (int)array_shift($categoryIds)['id_category'],
+                    true
+                )
+            )
+        ;
 
-                $childrenCategoriesFacet = new Facet;
-                $childrenCategoriesFacet->setName('Category');
+        $childrenCategoriesFacet = new Facet;
+        $childrenCategoriesFacet
+            ->setName('Category')
+            ->setIdentifier('childrenCategories')
+        ;
 
-                foreach ($categoryIds as $row) {
-                    $categoryId = (int)$row['id_category'];
-                    $childrenCategoriesFacet->addFilter(
-                        new CategoryFilter(
-                            $categoryId,
-                            false
-                        )
-                    );
+        foreach ($categoryIds as $row) {
+            $categoryId = (int)$row['id_category'];
+            $childrenCategoriesFacet->addFilter(
+                new CategoryFilter(
+                    $categoryId,
+                    false
+                )
+            );
+        }
+
+        $updatedFilters
+            ->addFacet($parentCategoryFacet)
+            ->addFacet(
+                $this->mergeCategoryFacets(
+                    $childrenCategoriesFacet,
+                    $query->getFacetByIdentifier('childrenCategories')
+                )
+            )
+        ;
+
+        return $updatedFilters;
+    }
+
+    private function mergeCategoryFacets(Facet $target, Facet $initial = null)
+    {
+        if (null === $initial) {
+            return $target;
+        }
+
+        foreach ($initial->getFilters() as $initialFilter) {
+            $found = false;
+            foreach ($target->getFilters() as $targetFilter) {
+                if ($targetFilter->getCategoryId() === $initialFilter->getCategoryId()) {
+                    $found = true;
+                    $targetFilter->setEnabled($initialFilter->isEnabled());
+                    break;
                 }
-
-                $updatedFilters
-                    ->addFacet($parentCategoryFacet)
-                    ->addFacet($childrenCategoriesFacet)
-                ;
+            }
+            if (!$found) {
+                $target->addFilter($initialFilter);
             }
         }
-        return $updatedFilters;
+        return $target;
     }
 
     private function addMissingProductInformation(QueryContext $context, array $products)

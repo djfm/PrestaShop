@@ -58,8 +58,8 @@ class Adapter_ProductQueryPresenter_Test extends IntegrationTestCase
     public function test_query_is_serialized_in_a_template_friendly_fashion()
     {
         $query = new Query;
-        $facet1 = (new Facet)->setName('First Facet');
-        $facet2 = (new Facet)->setName('Second Facet');
+        $facet1 = (new Facet)->setName('First Facet')->setIdentifier('first');
+        $facet2 = (new Facet)->setName('Second Facet')->setIdentifier('second');
 
         $facet1
             ->addFilter(new FakeProductFilter('fake 1'))
@@ -78,6 +78,7 @@ class Adapter_ProductQueryPresenter_Test extends IntegrationTestCase
         $this->assertEquals([
             [
                 'name' => 'First Facet',
+                'identifier' => 'first',
                 'filters' => [
                     [
                         'label'     => 'FakeProductFilter',
@@ -95,6 +96,7 @@ class Adapter_ProductQueryPresenter_Test extends IntegrationTestCase
             ],
             [
                 'name' => 'Second Facet',
+                'identifier' => 'second',
                 'filters' => [
                     [
                         'label'     => 'FakeProductFilter',

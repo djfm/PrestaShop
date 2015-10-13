@@ -8,6 +8,7 @@ class Facet
 {
     private $filters = [];
     private $name;
+    private $identifier;
 
     public function addFilter(AbstractProductFilter $filter)
     {
@@ -29,5 +30,16 @@ class Facet
     public function getName()
     {
         return $this->name;
+    }
+
+    public function setIdentifier($identifier)
+    {
+        $this->identifier = $identifier;
+        return $this;
+    }
+
+    public function getIdentifier()
+    {
+        return $this->identifier;
     }
 }

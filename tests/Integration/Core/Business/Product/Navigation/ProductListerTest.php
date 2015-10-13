@@ -65,12 +65,14 @@ class ProductListerTest extends IntegrationTestCase
         $parentCategoryFacet = new Facet;
         $parentCategoryFacet
             ->setName('Category')
+            ->setIdentifier('parentCategory')
             ->addFilter(new CategoryFilter(3, true))    // "Women"   , enabled
         ;
 
         $childrenCategoriesFacet = new Facet;
         $childrenCategoriesFacet
             ->setName('Category')
+            ->setIdentifier('childrenCategories')
             ->addFilter(new CategoryFilter(4, false))   // "Tops"    , disabled
             ->addFilter(new CategoryFilter(8, false))   // "Dresses" , disabled
         ;
