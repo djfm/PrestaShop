@@ -61,7 +61,7 @@ class Adapter_ProductLister implements ProductListerInterface
         return implode(' AND ', $cumulativeConditions);
     }
 
-    private function buildQueryFrom(QueryContext $context, Query $query, PaginationQuery $pagination)
+    private function buildQueryFrom(QueryContext $context, Query $query, PaginationQuery $pagination = null)
     {
         $sql = 'prefix_product product';
 
@@ -86,7 +86,7 @@ class Adapter_ProductLister implements ProductListerInterface
     private function buildQueryParts(
         QueryContext $context,
         Query $query,
-        PaginationQuery $pagination
+        PaginationQuery $pagination = null
     ) {
         return [
             'select'    => '',
@@ -132,16 +132,38 @@ class Adapter_ProductLister implements ProductListerInterface
             }
         }
 
+        if (null === $categoryId) {
+            return (int)Configuration::get('PS_ROOT_CATEGORY');
+        }
+
         return $categoryId;
     }
 
     private function buildUpdatedFilters(
         QueryContext $context,
         Query $query,
-        PaginationQuery $pagination
+        PaginationQuery $pagination = null
     ) {
         $updatedFilters = new Query;
-        $queryParts = $this->buildQueryParts($context, $query, $pagination);
+
+        $this->addCategoryFacets(
+            $updatedFilters,
+            $context,
+            $query
+        );
+
+        return $updatedFilters;
+    }
+
+    private function addCategoryFacets(
+        Query $updatedFilters,
+        QueryContext $context,
+        Query $query
+    ) {
+        $queryParts = $this->buildQueryParts(
+            $context,
+            $query->withoutFacet('childrenCategories')
+        );
 
         $topLevelCategoryId = $this->getTopLevelCategoryId($query);
 
@@ -203,7 +225,7 @@ class Adapter_ProductLister implements ProductListerInterface
             )
         ;
 
-        return $updatedFilters;
+        return $this;
     }
 
     private function mergeCategoryFacets(Facet $target, Facet $initial = null)

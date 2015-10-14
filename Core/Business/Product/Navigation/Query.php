@@ -26,4 +26,15 @@ class Query
         }
         return null;
     }
+
+    public function withoutFacet($identifier)
+    {
+        $query = new Query;
+        foreach ($this->getFacets() as $facet) {
+            if ($facet->getIdentifier() !== $identifier) {
+                $query->addFacet(clone $facet);
+            }
+        }
+        return $query;
+    }
 }
