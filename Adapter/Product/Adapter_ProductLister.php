@@ -156,14 +156,14 @@ class Adapter_ProductLister implements ProductListerInterface
     private function addCategoryFacets(
         Query $updatedFilters,
         QueryContext $context,
-        Query $query
+        Query $initialFilters
     ) {
         $queryParts = $this->buildQueryParts(
             $context,
-            $query->withoutFacet('childrenCategories')
+            $initialFilters->withoutFacet('childrenCategories')
         );
 
-        $topLevelCategoryId = $this->getTopLevelCategoryId($query);
+        $topLevelCategoryId = $this->getTopLevelCategoryId($initialFilters);
 
         $queryParts['select']   = 'other_categories.id_category';
         $queryParts['from']    .= ' INNER JOIN prefix_category category ON category.id_category = ' . (int)$topLevelCategoryId . '
@@ -218,7 +218,7 @@ class Adapter_ProductLister implements ProductListerInterface
             ->addFacet(
                 $this->mergeCategoryFacets(
                     $childrenCategoriesFacet,
-                    $query->getFacetByIdentifier('childrenCategories')
+                    $initialFilters->getFacetByIdentifier('childrenCategories')
                 )
             )
         ;
