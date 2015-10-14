@@ -12,13 +12,21 @@ class Facet
 
     public function addFilter(AbstractProductFilter $filter)
     {
-        $this->filters[] = $filter;
+        $this->filters[$filter->getIdentifier()] = $filter;
         return $this;
     }
 
     public function getFilters()
     {
         return $this->filters;
+    }
+
+    public function getFilterByIdentifier($identifier)
+    {
+        if (array_key_exists($identifier, $this->filters)) {
+            return $this->filters[$identifier];
+        }
+        return null;
     }
 
     public function setName($name)

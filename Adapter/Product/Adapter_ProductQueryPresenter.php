@@ -43,9 +43,11 @@ class Adapter_ProductQueryPresenter
         return [
             'name' => $facet->getName(),
             'identifier' => $facet->getIdentifier(),
-            'filters' => array_map(function (AbstractProductFilter $filter) use ($context, $path) {
-                return $this->presentFilter($context, $filter, $path);
-            }, $facet->getFilters())
+            'filters' => array_values(
+                array_map(function (AbstractProductFilter $filter) use ($context, $path) {
+                    return $this->presentFilter($context, $filter, $path);
+                }, $facet->getFilters())
+            )
         ];
     }
 

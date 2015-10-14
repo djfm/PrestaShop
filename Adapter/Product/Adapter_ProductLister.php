@@ -245,7 +245,7 @@ class Adapter_ProductLister implements ProductListerInterface
         $updatedFilters
             ->addFacet($parentCategoryFacet)
             ->addFacet(
-                $this->mergeCategoryFacets(
+                $this->mergeFacets(
                     $childrenCategoriesFacet,
                     $initialFilters->getFacetByIdentifier('childrenCategories')
                 )
@@ -289,35 +289,34 @@ class Adapter_ProductLister implements ProductListerInterface
                 )
             );
             $facet = new Facet;
+            $facetIdentifier = 'attributeGroup' . $groupId;
             $facet
-                ->setIdentifier('attributeGroup' . $groupId)
+                ->setIdentifier($facetIdentifier)
                 ->setName($groupName)
             ;
             foreach ($attributes as $attributeId) {
                 $filter = new AttributeFilter($groupId, $attributeId);
                 $facet->addFilter($filter);
             }
-            $updatedFilters->addFacet($facet);
+            $updatedFilters->addFacet(
+                $this->mergeFacets(
+                    $facet,
+                    $initialFilters->getFacetByIdentifier($facetIdentifier)
+                )
+            );
         }
     }
 
-    private function mergeCategoryFacets(Facet $target, Facet $initial = null)
+    private function mergeFacets(Facet $target, Facet $initial = null)
     {
         if (null === $initial) {
             return $target;
         }
 
         foreach ($initial->getFilters() as $initialFilter) {
-            $found = false;
-            foreach ($target->getFilters() as $targetFilter) {
-                if ($targetFilter->getCategoryId() === $initialFilter->getCategoryId()) {
-                    $found = true;
-                    $targetFilter->setEnabled($initialFilter->isEnabled());
-                    break;
-                }
-            }
-            if (!$found) {
-                $target->addFilter($initialFilter);
+            $targetFilter = $target->getFilterByIdentifier($initialFilter->getIdentifier());
+            if ($targetFilter) {
+                $targetFilter->setEnabled($initialFilter->isEnabled());
             }
         }
         return $target;

@@ -26,6 +26,11 @@ abstract class AbstractProductFilter
         return end($tmp);
     }
 
+    public function getIdentifier()
+    {
+        return $this->getFilterType() . $this->serializeCriterium();
+    }
+
     abstract public function getDataDomain();
     abstract public function serializeCriterium();
     abstract public function unserializeCriterium($string);
