@@ -5,6 +5,7 @@ namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation;
 class Query
 {
     private $facets = [];
+    private $pagination;
 
     public function addFacet(Facet $facet)
     {
@@ -36,5 +37,16 @@ class Query
             }
         }
         return $query;
+    }
+
+    public function setPagination(PaginationQuery $pagination)
+    {
+        $this->pagination = $pagination;
+        return $this;
+    }
+
+    public function getPagination()
+    {
+        return $this->pagination;
     }
 }

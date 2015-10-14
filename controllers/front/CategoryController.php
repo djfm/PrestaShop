@@ -291,7 +291,6 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
      */
     public function assignProductList()
     {
-        $pagination = new PaginationQuery;
         $query = new Query;
 
         if (($rawQuery = Tools::getValue('query'))) {
@@ -324,14 +323,14 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
             $query->addFacet($facet);
         }
 
-
+        $pagination = new PaginationQuery;
+        $query->setPagination($pagination);
 
         $queryContext = $this->getProductQueryContext();
 
         $result = $this->getProductLister()->listProducts(
             $queryContext,
-            $query,
-            $pagination
+            $query
         );
 
         $this->cat_products = $result->getProducts();

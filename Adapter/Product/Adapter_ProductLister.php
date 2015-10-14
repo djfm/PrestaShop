@@ -61,7 +61,7 @@ class Adapter_ProductLister implements ProductListerInterface
         return implode(' AND ', $cumulativeConditions);
     }
 
-    private function buildQueryFrom(QueryContext $context, Query $query, PaginationQuery $pagination = null)
+    private function buildQueryFrom(QueryContext $context, Query $query)
     {
         $sql = 'prefix_product product';
 
@@ -85,13 +85,12 @@ class Adapter_ProductLister implements ProductListerInterface
 
     private function buildQueryParts(
         QueryContext $context,
-        Query $query,
-        PaginationQuery $pagination = null
+        Query $query
     ) {
         return [
             'select'    => '',
-            'from'      => $this->buildQueryFrom($context, $query, $pagination),
-            'where'     => $this->buildQueryWhere($context, $query, $pagination),
+            'from'      => $this->buildQueryFrom($context, $query),
+            'where'     => $this->buildQueryWhere($context, $query),
             'groupBy'   => '',
             'orderBy'   => ''
         ];
@@ -141,8 +140,7 @@ class Adapter_ProductLister implements ProductListerInterface
 
     private function buildUpdatedFilters(
         QueryContext $context,
-        Query $query,
-        PaginationQuery $pagination = null
+        Query $query
     ) {
         $updatedFilters = new Query;
 
@@ -274,9 +272,9 @@ class Adapter_ProductLister implements ProductListerInterface
         }, $products);
     }
 
-    public function listProducts(QueryContext $context, Query $query, PaginationQuery $pagination)
+    public function listProducts(QueryContext $context, Query $query)
     {
-        $queryParts = $this->buildQueryParts($context, $query, $pagination);
+        $queryParts = $this->buildQueryParts($context, $query);
         $queryParts['select'] = 'product.*, product_lang.*';
         $sql = $this->assembleQueryParts($queryParts);
 
@@ -286,7 +284,7 @@ class Adapter_ProductLister implements ProductListerInterface
         $result->setProducts($products);
 
         $result->setUpdatedFilters($this->buildUpdatedFilters(
-            $context, $query, $pagination
+            $context, $query
         ));
 
         return $result;
