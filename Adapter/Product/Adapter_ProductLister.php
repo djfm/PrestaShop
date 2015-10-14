@@ -66,6 +66,21 @@ class Adapter_ProductLister implements ProductListerInterface
         return implode(' AND ', $cumulativeConditions);
     }
 
+    private function buildAttributesJoins($facetIndex)
+    {
+        // TODO: Mulstishop not supported at this point.
+        $i = $facetIndex;
+        return " INNER JOIN prefix_product_attribute product_attribute{$i}
+                        ON product_attribute{$i}.id_product = product.id_product
+                   INNER JOIN prefix_product_attribute_combination product_attribute_combination{$i}
+                        ON product_attribute_combination{$i}.id_product_attribute = product_attribute{$i}.id_product_attribute
+                   INNER JOIN prefix_attribute attribute{$i}
+                        ON attribute{$i}.id_attribute = product_attribute_combination{$i}.id_attribute
+                   INNER JOIN prefix_attribute_group attribute_group{$i}
+                        ON attribute_group{$i}.id_attribute_group = attribute{$i}.id_attribute_group"
+        ;
+    }
+
     private function buildQueryFrom(QueryContext $context, Query $query)
     {
         $sql = 'prefix_product product';
@@ -81,14 +96,7 @@ class Adapter_ProductLister implements ProductListerInterface
                                 ON category_shop{$i}.id_category = category_product{$i}.id_category
                                     AND category_shop{$i}.id_shop = " . (int)$context->getShopId();
                 } else if ('attributes' === $domain){
-                    $sql .= " INNER JOIN prefix_product_attribute product_attribute{$i}
-                                    ON product_attribute{$i}.id_product = product.id_product
-                               INNER JOIN prefix_product_attribute_combination product_attribute_combination{$i}
-                                    ON product_attribute_combination{$i}.id_product_attribute = product_attribute{$i}.id_product_attribute
-                               INNER JOIN prefix_attribute attribute{$i}
-                                    ON attribute{$i}.id_attribute = product_attribute_combination{$i}.id_attribute
-                               INNER JOIN prefix_attribute_group attribute_group{$i}
-                                    ON attribute_group{$i}.id_attribute_group = attribute{$i}.id_attribute_group";
+                    $sql .= $this->buildAttributesJoins($i);
                 } else {
                     throw new Exception(sprintf('Unknown product data domain `%s`.', $domain));
                 }
@@ -160,6 +168,12 @@ class Adapter_ProductLister implements ProductListerInterface
         $updatedFilters = new Query;
 
         $this->addCategoryFacets(
+            $updatedFilters,
+            $context,
+            $query
+        );
+
+        $this->addAttributeGroupFacets(
             $updatedFilters,
             $context,
             $query
@@ -239,6 +253,52 @@ class Adapter_ProductLister implements ProductListerInterface
         ;
 
         return $this;
+    }
+
+    private function addAttributeGroupFacets(
+        Query $updatedFilters,
+        QueryContext $context,
+        Query $initialFilters
+    ) {
+        $queryParts = $this->buildQueryParts(
+            $context,
+            $initialFilters->withoutFacet(function ($identifier) {
+                return preg_match('/^attributeGroup\d+$/', $identifier);
+            })
+        );
+
+        $queryParts['select']   = 'attribute.id_attribute_group, attribute.id_attribute';
+        $queryParts['groupBy']  = 'attribute.id_attribute_group, attribute.id_attribute';
+        $queryParts['orderBy']  = 'attribute.id_attribute_group, attribute.id_attribute';
+        $queryParts['from']    .= $this->buildAttributesJoins('');
+
+        $sql = $this->assembleQueryParts($queryParts);
+
+        $attributes = Db::getInstance()->executeS($sql);
+
+        $groups = [];
+
+        foreach ($attributes as $row) {
+            $groups[(int)$row['id_attribute_group']][] = (int)$row['id_attribute'];
+        }
+
+        foreach ($groups as $groupId => $attributes) {
+            $groupName = Db::getInstance()->getValue(
+                $this->addDbPrefix(
+                    "SELECT name FROM prefix_attribute_group_lang WHERE id_attribute_group = $groupId AND id_lang = " . (int)$context->getLanguageId()
+                )
+            );
+            $facet = new Facet;
+            $facet
+                ->setIdentifier('attributeGroup' . $groupId)
+                ->setName($groupName)
+            ;
+            foreach ($attributes as $attributeId) {
+                $filter = new AttributeFilter($groupId, $attributeId);
+                $facet->addFilter($filter);
+            }
+            $updatedFilters->addFacet($facet);
+        }
     }
 
     private function mergeCategoryFacets(Facet $target, Facet $initial = null)

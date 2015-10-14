@@ -4,6 +4,7 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryContext;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AttributeFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AbstractProductFilter;
 
 class Adapter_ProductQueryPresenter
@@ -16,6 +17,10 @@ class Adapter_ProductQueryPresenter
             $label = Db::getInstance()->executeS(
                 'SELECT name FROM ' . _DB_PREFIX_ . 'category_lang WHERE id_category = ' . (int)$filter->getCategoryId() . ' AND id_lang = ' . (int)$context->getLanguageId() . ' AND id_shop = ' . (int)$context->getShopId()
             )[0]['name'];
+        } else if ($filter instanceof AttributeFilter) {
+            $label = Db::getInstance()->getValue(
+                "SELECT name FROM " . _DB_PREFIX_ . "attribute_lang WHERE id_attribute = " . (int)$filter->getAttributeId() . " AND id_lang = " . (int)$context->getLanguageId()
+            );
         }
 
         $inputValue = json_encode([

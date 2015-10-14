@@ -32,7 +32,14 @@ class Query
     {
         $query = new Query;
         foreach ($this->getFacets() as $facet) {
-            if ($facet->getIdentifier() !== $identifier) {
+            $add = false;
+            if (is_string($identifier)) {
+                $add = $facet->getIdentifier() !== $identifier;
+            } else {
+                $add = !$identifier($facet->getIdentifier());
+            }
+
+            if ($add) {
                 $query->addFacet(clone $facet);
             }
         }
