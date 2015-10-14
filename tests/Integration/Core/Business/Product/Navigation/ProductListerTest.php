@@ -61,8 +61,6 @@ class ProductListerTest extends IntegrationTestCase
 
         $result = $this->lister->listProducts($this->context, $query, $this->pagination);
 
-        $expectedUpdatedFilters = new Query;
-
         $parentCategoryFacet = new Facet;
         $parentCategoryFacet
             ->setName('Category')
@@ -78,12 +76,15 @@ class ProductListerTest extends IntegrationTestCase
             ->addFilter(new CategoryFilter(8, false))   // "Dresses" , disabled
         ;
 
-        $expectedUpdatedFilters
-            ->addFacet($parentCategoryFacet)
-            ->addFacet($childrenCategoriesFacet)
-        ;
+        $this->assertEquals(
+            $parentCategoryFacet,
+            $result->getUpdatedFilters()->getFacetByIdentifier('parentCategory')
+        );
 
-        $this->assertEquals($expectedUpdatedFilters, $result->getUpdatedFilters());
+        $this->assertEquals(
+            $childrenCategoriesFacet,
+            $result->getUpdatedFilters()->getFacetByIdentifier('childrenCategories')
+        );
     }
 
     public function test_Products_Are_Found_By_Category_And_Color()
