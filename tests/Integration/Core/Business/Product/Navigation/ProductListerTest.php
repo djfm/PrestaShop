@@ -8,6 +8,7 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AttributeFilter;
 use Adapter_ServiceLocator;
 use Context;
 
@@ -83,5 +84,28 @@ class ProductListerTest extends IntegrationTestCase
         ;
 
         $this->assertEquals($expectedUpdatedFilters, $result->getUpdatedFilters());
+    }
+
+    public function test_Products_Are_Found_By_Category_And_Color()
+    {
+        $query          = new Query;
+
+        $categoryFacet  = new Facet;
+        $categoryFacet->addFilter(new CategoryFilter(4, true));
+
+        $colorFacet     = new Facet;
+        $colorFacet->addFilter(new AttributeFilter(3, 11, true));
+
+        $query
+            ->addFacet($categoryFacet)
+            ->addFacet($colorFacet)
+        ;
+
+        $result = $this->lister->listProducts($this->context, $query);
+        $this->assertInstanceOf(
+            'PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryResult',
+            $result
+        );
+        $this->assertCount(1, $result->getProducts());
     }
 }

@@ -14,6 +14,13 @@ class AttributeFilter extends AbstractProductFilter
      */
     private $attributeId;
 
+    public function __construct($attributeGroupId = null, $attributeId = null, $enabled = false)
+    {
+        $this->setAttributeGroupId($attributeGroupId);
+        $this->setAttributeId($attributeId);
+        $this->setEnabled($enabled);
+    }
+
     public function setAttributeGroupId($attributeGroupId)
     {
         $this->attributeGroupId = $attributeGroupId;
@@ -34,5 +41,26 @@ class AttributeFilter extends AbstractProductFilter
     public function getAttributeId()
     {
         return $this->attributeId;
+    }
+
+    public function getDataDomain()
+    {
+        return 'attributes';
+    }
+
+    public function serializeCriterium()
+    {
+        return json_encode([
+            $this->getAttributeGroupId(),
+            $this->getAttributeId()
+        ]);
+    }
+
+    public function unserializeCriterium($criterium)
+    {
+        list($attributeGroupId, $attributeId) = json_decode($criterium, true);
+        $this->setAttributeId($attributeId);
+        $this->setAttributeGroupId($attributeGroupId);
+        return $this;
     }
 }

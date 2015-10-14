@@ -7,6 +7,7 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AbstractProductFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AttributeFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryResult;
 
 class Adapter_ProductLister implements ProductListerInterface
@@ -40,6 +41,10 @@ class Adapter_ProductLister implements ProductListerInterface
     {
         if ($filter instanceof CategoryFilter) {
             return "category_product{$facetIndex}.id_category = " . (int)$filter->getCategoryId();
+        } else if ($filter instanceof AttributeFilter) {
+            return "attribute{$facetIndex}.id_attribute_group = " . (int)$filter->getAttributeGroupId()
+                 . " AND attribute{$facetIndex}.id_attribute = " . (int)$filter->getAttributeId()
+            ;
         } else {
             throw new Exception(
                 sprintf(
@@ -69,13 +74,23 @@ class Adapter_ProductLister implements ProductListerInterface
 
         foreach ($query->getFacets() as $i => $facet) {
             foreach ($this->getFacetDataDomains($facet) as $domain) {
-                switch ($domain) {
-                    case 'categories':
-                        $sql .= " INNER JOIN prefix_category_product category_product{$i}
-                                    ON category_product{$i}.id_product = product.id_product
-                                  INNER JOIN prefix_category_shop category_shop{$i}
-                                    ON category_shop{$i}.id_category = category_product{$i}.id_category
-                                        AND category_shop{$i}.id_shop = " . (int)$context->getShopId();
+                if ('categories' === $domain) {
+                    $sql .= " INNER JOIN prefix_category_product category_product{$i}
+                                ON category_product{$i}.id_product = product.id_product
+                              INNER JOIN prefix_category_shop category_shop{$i}
+                                ON category_shop{$i}.id_category = category_product{$i}.id_category
+                                    AND category_shop{$i}.id_shop = " . (int)$context->getShopId();
+                } else if ('attributes' === $domain){
+                    $sql .= " INNER JOIN prefix_product_attribute product_attribute{$i}
+                                    ON product_attribute{$i}.id_product = product.id_product
+                               INNER JOIN prefix_product_attribute_combination product_attribute_combination{$i}
+                                    ON product_attribute_combination{$i}.id_product_attribute = product_attribute{$i}.id_product_attribute
+                               INNER JOIN prefix_attribute attribute{$i}
+                                    ON attribute{$i}.id_attribute = product_attribute_combination{$i}.id_attribute
+                               INNER JOIN prefix_attribute_group attribute_group{$i}
+                                    ON attribute_group{$i}.id_attribute_group = attribute{$i}.id_attribute_group";
+                } else {
+                    throw new Exception(sprintf('Unknown product data domain `%s`.', $domain));
                 }
             }
         }
@@ -275,7 +290,7 @@ class Adapter_ProductLister implements ProductListerInterface
     public function listProducts(QueryContext $context, Query $query)
     {
         $queryParts = $this->buildQueryParts($context, $query);
-        $queryParts['select'] = 'product.*, product_lang.*';
+        $queryParts['select'] = 'DISTINCT product.*, product_lang.*';
         $sql = $this->assembleQueryParts($queryParts);
 
         $products = $this->addMissingProductInformation($context, Db::getInstance()->executeS($sql));
