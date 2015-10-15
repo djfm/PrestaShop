@@ -8,7 +8,7 @@ class QueryResult
      * The products found.
      * @var array
      */
-    private $products;
+    private $products = [];
 
     /**
      * The total number of pages for this query.
@@ -33,6 +33,12 @@ class QueryResult
      * @var ProductQuery
      */
     private $updatedFilters;
+
+    /**
+     * Available sort options
+     * @var array of SortOption
+     */
+    private $sortOptions = [];
 
     public function setProducts(array $products)
     {
@@ -92,5 +98,23 @@ class QueryResult
     public function getUpdatedFilters()
     {
         return $this->updatedFilters;
+    }
+
+    public function setSortOptions(array $sortOptions)
+    {
+        $this->sortOptions = [];
+        array_map([$this, 'addSortOption'], $sortOptions);
+        return $this;
+    }
+
+    public function getSortOptions()
+    {
+        return $this->sortOptions;
+    }
+
+    public function addSortOption(SortOption $option)
+    {
+        $this->sortOptions[] = $option;
+        return $this;
     }
 }

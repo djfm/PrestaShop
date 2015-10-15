@@ -7,6 +7,7 @@ use Core_Foundation_Database_DatabaseInterface;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\ProductListerInterface;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryContext;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\SortOption;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AbstractProductFilter;
@@ -297,6 +298,14 @@ class ProductLister implements ProductListerInterface
         }
     }
 
+    private function setSortOptions(QueryResult $result)
+    {
+        $result->setSortOptions([
+            new SortOption('product_lang.name', 'ASC', 'Product A to Z'),
+            new SortOption('product_lang.name', 'DESC', 'Product Z to A')
+        ]);
+    }
+
     public function listProducts(QueryContext $context, Query $query)
     {
         $queryParts = $this->buildQueryParts($context, $query);
@@ -324,6 +333,8 @@ class ProductLister implements ProductListerInterface
         $result->setUpdatedFilters($this->buildUpdatedFilters(
             $context, $query
         ));
+
+        $this->setSortOptions($result);
 
         return $result;
     }
