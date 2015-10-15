@@ -30,9 +30,9 @@ class FakeProductFilter extends AbstractProductFilter
         return $this;
     }
 
-    public function getDataDomain()
+    public function getQueryHelper()
     {
-        return 'Fake';
+        return null;
     }
 }
 

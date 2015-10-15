@@ -2,6 +2,8 @@
 
 namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter;
 
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryHelper\CategoriesQueryHelper;
+
 class CategoryFilter extends AbstractProductFilter
 {
     /**
@@ -26,11 +28,6 @@ class CategoryFilter extends AbstractProductFilter
         return $this->categoryId;
     }
 
-    public function getDataDomain()
-    {
-        return 'categories';
-    }
-
     public function serializeCriterium()
     {
         return $this->getCategoryId();
@@ -39,5 +36,10 @@ class CategoryFilter extends AbstractProductFilter
     public function unserializeCriterium($categoryId)
     {
         return $this->setCategoryId((int)$categoryId);
+    }
+
+    public function getQueryHelper()
+    {
+        return new CategoriesQueryHelper;
     }
 }

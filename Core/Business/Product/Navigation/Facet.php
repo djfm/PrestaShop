@@ -50,4 +50,29 @@ class Facet
     {
         return $this->identifier;
     }
+
+    public function getQueryHelpers()
+    {
+        $helpers = [];
+
+        foreach ($this->getFilters() as $filter) {
+            $helper = $filter->getQueryHelper();
+            $helpers[get_class($helper)] = $helper;
+        }
+
+        return $helpers;
+    }
+
+    public function merge(Facet $facet = null)
+    {
+        if (null !== $facet) {
+            foreach ($facet->getFilters() as $initialFilter) {
+                $targetFilter = $this->getFilterByIdentifier($initialFilter->getIdentifier());
+                if ($targetFilter) {
+                    $targetFilter->setEnabled($initialFilter->isEnabled());
+                }
+            }
+        }
+        return $this;
+    }
 }

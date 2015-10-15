@@ -13,7 +13,9 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AbstractProductFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryHelper\CategoriesQueryHelper;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AttributeFilter;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryHelper\AttributesQueryHelper;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryResult;
 
 class ProductLister implements ProductListerInterface
@@ -69,89 +71,29 @@ class ProductLister implements ProductListerInterface
         return $filter;
     }
 
-    private function getFacetDataDomains(Facet $facet)
-    {
-        return array_unique(array_map(function (AbstractProductFilter $filter) {
-            return $filter->getDataDomain();
-        }, $facet->getFilters()));
-    }
-
-    private function getQueryDataDomains(Query $query)
-    {
-        return array_unique(
-            call_user_func_array(
-                'array_merge',
-                array_map(
-                    [$this, 'getFacetDataDomains'],
-                    $query->getFacets()
-                )
-            )
-        );
-    }
-
-    private function filterToSQL(AbstractProductFilter $filter, $facetIndex)
-    {
-        if ($filter instanceof CategoryFilter) {
-            return "category_product{$facetIndex}.id_category = " . (int)$filter->getCategoryId();
-        } elseif ($filter instanceof AttributeFilter) {
-            return "attribute{$facetIndex}.id_attribute_group = " . (int)$filter->getAttributeGroupId()
-                 . " AND attribute{$facetIndex}.id_attribute = " . (int)$filter->getAttributeId()
-            ;
-        } else {
-            throw new Exception(
-                sprintf(
-                    'Cannot build SQL for filter with class `%s`.',
-                    get_class($filter)
-                )
-            );
-        }
-    }
-
     private function buildQueryWhere(QueryContext $context, Query $query)
     {
         $cumulativeConditions = [];
         foreach ($query->getFacets() as $i => $facet) {
             $cumulativeConditions[] = '(' . implode(' OR ', array_map(function (AbstractProductFilter $filter) use ($i) {
-                return $this->filterToSQL($filter, $i);
+                return $filter->getQueryHelper()->getConditionSQLForQuery($filter, $i);
             }, $facet->getFilters())) . ')';
         }
         return implode(' AND ', $cumulativeConditions);
     }
 
-    private function buildAttributesJoins($facetIndex)
-    {
-        // TODO: Mulstishop not supported at this point.
-        $i = $facetIndex;
-        return " INNER JOIN prefix_product_attribute product_attribute{$i}
-                        ON product_attribute{$i}.id_product = product.id_product
-                   INNER JOIN prefix_product_attribute_combination product_attribute_combination{$i}
-                        ON product_attribute_combination{$i}.id_product_attribute = product_attribute{$i}.id_product_attribute
-                   INNER JOIN prefix_attribute attribute{$i}
-                        ON attribute{$i}.id_attribute = product_attribute_combination{$i}.id_attribute
-                   INNER JOIN prefix_attribute_group attribute_group{$i}
-                        ON attribute_group{$i}.id_attribute_group = attribute{$i}.id_attribute_group"
-        ;
-    }
-
     private function buildQueryFrom(QueryContext $context, Query $query)
     {
-        $sql = 'prefix_product product';
-
-        $sql .= ' INNER JOIN prefix_product_lang product_lang ON product_lang.id_product = product.id_product AND product_lang.id_lang = ' . (int)$context->getLanguageId() . ' AND product_lang.id_shop = ' . (int)$context->getShopId();
+        $sql = 'prefix_product product
+                    INNER JOIN prefix_product_lang product_lang
+                        ON product_lang.id_product = product.id_product
+                            AND product_lang.id_lang = ' . (int)$context->getLanguageId()
+                        . ' AND product_lang.id_shop = ' . (int)$context->getShopId()
+        ;
 
         foreach ($query->getFacets() as $i => $facet) {
-            foreach ($this->getFacetDataDomains($facet) as $domain) {
-                if ('categories' === $domain) {
-                    $sql .= " INNER JOIN prefix_category_product category_product{$i}
-                                ON category_product{$i}.id_product = product.id_product
-                              INNER JOIN prefix_category_shop category_shop{$i}
-                                ON category_shop{$i}.id_category = category_product{$i}.id_category
-                                    AND category_shop{$i}.id_shop = " . (int)$context->getShopId();
-                } elseif ('attributes' === $domain) {
-                    $sql .= $this->buildAttributesJoins($i);
-                } else {
-                    throw new Exception(sprintf('Unknown product data domain `%s`.', $domain));
-                }
+            foreach ($facet->getQueryHelpers() as $helper) {
+                $sql .= ' ' . $helper->getJoinsSQLForQuery($context, $i);
             }
         }
 
@@ -174,13 +116,13 @@ class ProductLister implements ProductListerInterface
     private function assembleQueryParts(array $queryParts)
     {
         $sql = "SELECT {$queryParts['select']} FROM {$queryParts['from']}";
-        if ($queryParts['where']) {
+        if (!empty($queryParts['where'])) {
             $sql .= " WHERE {$queryParts['where']}";
         }
-        if ($queryParts['groupBy']) {
+        if (!empty($queryParts['groupBy'])) {
             $sql .= " GROUP BY {$queryParts['groupBy']}";
         }
-        if ($queryParts['orderBy']) {
+        if (!empty($queryParts['orderBy'])) {
             $sql .= " ORDER BY {$queryParts['orderBy']}";
         }
         return $this->addDbPrefix($sql);
@@ -246,23 +188,13 @@ class ProductLister implements ProductListerInterface
 
         $topLevelCategoryId = $this->getTopLevelCategoryId($initialFilters);
 
-        $queryParts['select']   = 'other_categories.id_category';
-        $queryParts['from']    .= ' INNER JOIN prefix_category category ON category.id_category = ' . (int)$topLevelCategoryId . '
-                                    INNER JOIN prefix_category_product other_categories
-                                        ON other_categories.id_product = product.id_product
-                                    INNER JOIN prefix_category_shop category_shop
-                                      ON category_shop.id_category = other_categories.id_category
-                                        AND category_shop.id_shop = ' . (int)$context->getShopId() . '
-                                    INNER JOIN prefix_category other_category
-                                        ON other_category.id_category = other_categories.id_category
-                                            AND other_category.nleft  >= category.nleft
-                                            AND other_category.nright <= category.nright
-                                            AND (other_category.level_depth - category.level_depth <= 1)'
-                                ;
-        $queryParts['groupBy']  = 'other_categories.id_category';
-        $queryParts['orderBy']  = 'other_category.level_depth ASC, other_category.nleft ASC';
+        $newParts = (new CategoriesQueryHelper)->getQueryPartsForFiltersUpdate(
+            $context,
+            $this->getTopLevelCategoryId($initialFilters)
+        );
+        $newParts['from'] = $queryParts['from'] . ' ' . $newParts['from'];
 
-        $sql = $this->assembleQueryParts($queryParts);
+        $sql = $this->assembleQueryParts($newParts);
 
         $categoryIds = $this->db->select($sql);
 
@@ -300,8 +232,7 @@ class ProductLister implements ProductListerInterface
         $updatedFilters
             ->addFacet($parentCategoryFacet)
             ->addFacet(
-                $this->mergeFacets(
-                    $childrenCategoriesFacet,
+                $childrenCategoriesFacet->merge(
                     $initialFilters->getFacetByIdentifier('childrenCategories')
                 )
             )
@@ -322,12 +253,12 @@ class ProductLister implements ProductListerInterface
             })
         );
 
-        $queryParts['select']   = 'attribute.id_attribute_group, attribute.id_attribute';
-        $queryParts['groupBy']  = 'attribute.id_attribute_group, attribute.id_attribute';
-        $queryParts['orderBy']  = 'attribute.id_attribute_group, attribute.id_attribute';
-        $queryParts['from']    .= $this->buildAttributesJoins('');
+        $queryHelper = new AttributesQueryHelper;
 
-        $sql = $this->assembleQueryParts($queryParts);
+        $newParts = $queryHelper->getQueryPartsForFiltersUpdate($context);
+        $newParts['from'] = $queryParts['from'] . ' ' . $newParts['from'];
+
+        $sql = $this->assembleQueryParts($newParts);
 
         $attributes = $this->db->select($sql);
 
@@ -352,27 +283,11 @@ class ProductLister implements ProductListerInterface
                 $facet->addFilter($this->setAttributeFilterLabel($context, $filter));
             }
             $updatedFilters->addFacet(
-                $this->mergeFacets(
-                    $facet,
+                $facet->merge(
                     $initialFilters->getFacetByIdentifier($facetIdentifier)
                 )
             );
         }
-    }
-
-    private function mergeFacets(Facet $target, Facet $initial = null)
-    {
-        if (null === $initial) {
-            return $target;
-        }
-
-        foreach ($initial->getFilters() as $initialFilter) {
-            $targetFilter = $target->getFilterByIdentifier($initialFilter->getIdentifier());
-            if ($targetFilter) {
-                $targetFilter->setEnabled($initialFilter->isEnabled());
-            }
-        }
-        return $target;
     }
 
     public function listProducts(QueryContext $context, Query $query)

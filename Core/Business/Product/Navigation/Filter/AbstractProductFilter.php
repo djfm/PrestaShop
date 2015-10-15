@@ -42,7 +42,7 @@ abstract class AbstractProductFilter
         return $this->label;
     }
 
-    abstract public function getDataDomain();
     abstract public function serializeCriterium();
     abstract public function unserializeCriterium($string);
+    abstract public function getQueryHelper();
 }

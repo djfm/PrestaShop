@@ -1,6 +1,7 @@
 <?php
 
 namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryHelper\AttributesQueryHelper;
 
 class AttributeFilter extends AbstractProductFilter
 {
@@ -43,11 +44,6 @@ class AttributeFilter extends AbstractProductFilter
         return $this->attributeId;
     }
 
-    public function getDataDomain()
-    {
-        return 'attributes';
-    }
-
     public function serializeCriterium()
     {
         return json_encode([
@@ -62,5 +58,10 @@ class AttributeFilter extends AbstractProductFilter
         $this->setAttributeId($attributeId);
         $this->setAttributeGroupId($attributeGroupId);
         return $this;
+    }
+
+    public function getQueryHelper()
+    {
+        return new AttributesQueryHelper;
     }
 }
