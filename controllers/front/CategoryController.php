@@ -156,7 +156,6 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
 
         // Product sort must be called before assignProductList()
         $this->productSort();
-        $this->assignSortOptions();
         $this->assignScenes();
         $this->assignSubcategories();
         $this->assignProductList();
@@ -225,11 +224,6 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         }, $options);
 
         return $options;
-    }
-
-    public function assignSortOptions()
-    {
-        $this->context->smarty->assign('sort_options', $this->getSortOptions());
     }
 
     /**
