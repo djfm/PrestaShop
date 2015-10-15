@@ -1,4 +1,5 @@
 <?php
+namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation;
 
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryContext;
@@ -6,22 +7,25 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AttributeFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AbstractProductFilter;
+use Core_Foundation_Database_DatabaseInterface;
+use Core_Business_ConfigurationInterface;
 
-class Adapter_ProductQueryPresenter
+class QueryPresenter
 {
-    private function presentFilter(QueryContext $context, AbstractProductFilter $filter, $path)
+    private function presentFilter(AbstractProductFilter $filter, $path)
     {
+        /*
         $label = $filter->getFilterType();
 
         if ($filter instanceof CategoryFilter) {
-            $label = Db::getInstance()->executeS(
-                'SELECT name FROM ' . _DB_PREFIX_ . 'category_lang WHERE id_category = ' . (int)$filter->getCategoryId() . ' AND id_lang = ' . (int)$context->getLanguageId() . ' AND id_shop = ' . (int)$context->getShopId()
+            $label = $this->getValue(
+                'SELECT name FROM prefix_category_lang WHERE id_category = ' . (int)$filter->getCategoryId() . ' AND id_lang = ' . (int)$context->getLanguageId() . ' AND id_shop = ' . (int)$context->getShopId()
             )[0]['name'];
         } else if ($filter instanceof AttributeFilter) {
-            $label = Db::getInstance()->getValue(
-                "SELECT name FROM " . _DB_PREFIX_ . "attribute_lang WHERE id_attribute = " . (int)$filter->getAttributeId() . " AND id_lang = " . (int)$context->getLanguageId()
+            $label = $this->getValue(
+                'SELECT name FROM prefix_attribute_lang WHERE id_attribute = ' . (int)$filter->getAttributeId() . ' AND id_lang = ' . (int)$context->getLanguageId()
             );
-        }
+        }*/
 
         $inputValue = json_encode([
             'filterType' => $filter->getFilterType(),
@@ -30,7 +34,7 @@ class Adapter_ProductQueryPresenter
         ]);
 
         return [
-            'label'      => $label,
+            'label'      => $filter->getLabel(),
             'inputName'  => $path . '[]',
             'inputValue' => $inputValue,
             'enabled'    => $filter->isEnabled(),
@@ -38,24 +42,24 @@ class Adapter_ProductQueryPresenter
         ];
     }
 
-    private function presentFacet(QueryContext $context, Facet $facet, $path)
+    private function presentFacet(Facet $facet, $path)
     {
         return [
             'name' => $facet->getName(),
             'identifier' => $facet->getIdentifier(),
             'filters' => array_values(
-                array_map(function (AbstractProductFilter $filter) use ($context, $path) {
-                    return $this->presentFilter($context, $filter, $path);
+                array_map(function (AbstractProductFilter $filter) use ($path) {
+                    return $this->presentFilter($filter, $path);
                 }, $facet->getFilters())
             )
         ];
     }
 
-    public function present(QueryContext $context, Query $query)
+    public function present(Query $query)
     {
         $counter = 0;
-        return array_map(function (Facet $facet) use ($context, &$counter) {
-            return $this->presentFacet($context, $facet, 'query[' . ($counter++) . ']');
+        return array_map(function (Facet $facet) use (&$counter) {
+            return $this->presentFacet($facet, 'query[' . ($counter++) . ']');
         }, $query->getFacets());
     }
 }

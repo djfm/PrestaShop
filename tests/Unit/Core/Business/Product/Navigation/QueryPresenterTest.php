@@ -1,14 +1,13 @@
 <?php
 
-namespace PrestaShop\PrestaShop\Tests\Integration\Adapter;
+namespace PrestaShop\PrestaShop\Tests\Unit\Core\Business\Product\Navigation;
 
-use PrestaShop\PrestaShop\Tests\TestCase\IntegrationTestCase;
+use PHPUnit_Framework_Testcase;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryContext;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryPresenter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AbstractProductFilter;
-use Adapter_ProductQueryPresenter;
-use Context;
 
 class FakeProductFilter extends AbstractProductFilter
 {
@@ -17,6 +16,7 @@ class FakeProductFilter extends AbstractProductFilter
     public function __construct($criterium)
     {
         $this->criterium = $criterium;
+        $this->setLabel('FakeProductFilter');
     }
 
     public function serializeCriterium()
@@ -36,23 +36,13 @@ class FakeProductFilter extends AbstractProductFilter
     }
 }
 
-class Adapter_ProductQueryPresenter_Test extends IntegrationTestCase
+class QueryPresenterTest extends PHPUnit_Framework_Testcase
 {
     private $presenter;
-    private $context;
 
     public function setup()
     {
-        parent::setup();
-        $this->presenter = new Adapter_ProductQueryPresenter;
-
-        $psContext = Context::getContext();
-        parent::setup();
-        $this->context = new QueryContext;
-        $this->context
-            ->setShopId($psContext->shop->id)
-            ->setLanguageId($psContext->language->id)
-        ;
+        $this->presenter = new QueryPresenter;
     }
 
     public function test_query_is_serialized_in_a_template_friendly_fashion()
@@ -106,6 +96,6 @@ class Adapter_ProductQueryPresenter_Test extends IntegrationTestCase
                     ],
                 ]
             ]
-        ], $this->presenter->present($this->context, $query));
+        ], $this->presenter->present($query));
     }
 }

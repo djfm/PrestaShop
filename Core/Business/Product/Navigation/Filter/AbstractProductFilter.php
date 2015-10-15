@@ -3,11 +3,11 @@
 namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter;
 
 use PrestaShop\PrestaShop\Core\Business\Product\ProductQueryInterface;
-use Serializable;
 
 abstract class AbstractProductFilter
 {
     private $enabled = false;
+    private $label;
 
     public function setEnabled($enabled = true)
     {
@@ -29,6 +29,17 @@ abstract class AbstractProductFilter
     public function getIdentifier()
     {
         return $this->getFilterType() . $this->serializeCriterium();
+    }
+
+    public function setLabel($label)
+    {
+        $this->label = $label;
+        return $this;
+    }
+
+    public function getLabel()
+    {
+        return $this->label;
     }
 
     abstract public function getDataDomain();

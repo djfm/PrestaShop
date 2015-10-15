@@ -34,6 +34,41 @@ class ProductLister implements ProductListerInterface
         return str_replace('prefix_', $this->configuration->get('_DB_PREFIX_'), $sql);
     }
 
+    private function select($sql)
+    {
+        return $this->db->select($this->addDbPrefix($sql));
+    }
+
+    private function getDbValue($sql)
+    {
+        $rows = $this->select($sql);
+        return current(current($rows));
+    }
+
+    private function setCategoryFilterLabel(QueryContext $context, CategoryFilter $filter)
+    {
+        $filter->setLabel(
+            $this->getDbValue(
+                'SELECT name FROM prefix_category_lang WHERE id_category = '
+                . (int)$filter->getCategoryId()
+                . ' AND id_lang = ' . (int)$context->getLanguageId()
+                . ' AND id_shop = ' . (int)$context->getShopId())
+        );
+        return $filter;
+    }
+
+    private function setAttributeFilterLabel(QueryContext $context, AttributeFilter $filter)
+    {
+        $filter->setLabel(
+            $this->getDbValue(
+                'SELECT name FROM prefix_attribute_lang WHERE id_attribute = '
+                . (int)$filter->getAttributeId()
+                . ' AND id_lang = ' . (int)$context->getLanguageId()
+            )
+        );
+        return $filter;
+    }
+
     private function getFacetDataDomains(Facet $facet)
     {
         return array_unique(array_map(function (AbstractProductFilter $filter) {
@@ -236,9 +271,12 @@ class ProductLister implements ProductListerInterface
             ->setName('Category')
             ->setIdentifier('parentCategory')
             ->addFilter(
-                new CategoryFilter(
-                    (int)array_shift($categoryIds)['id_category'],
-                    true
+                $this->setCategoryFilterLabel(
+                    $context,
+                    new CategoryFilter(
+                        (int)array_shift($categoryIds)['id_category'],
+                        true
+                    )
                 )
             )
         ;
@@ -252,9 +290,9 @@ class ProductLister implements ProductListerInterface
         foreach ($categoryIds as $row) {
             $categoryId = (int)$row['id_category'];
             $childrenCategoriesFacet->addFilter(
-                new CategoryFilter(
-                    $categoryId,
-                    false
+                $this->setCategoryFilterLabel(
+                    $context,
+                    new CategoryFilter($categoryId, false)
                 )
             );
         }
@@ -300,11 +338,9 @@ class ProductLister implements ProductListerInterface
         }
 
         foreach ($groups as $groupId => $attributes) {
-            $groupName = $this->db->select(
-                $this->addDbPrefix(
-                    "SELECT name FROM prefix_attribute_group_lang WHERE id_attribute_group = $groupId AND id_lang = " . (int)$context->getLanguageId()
-                )
-            )[0]['name'];
+            $groupName = $this->getDbValue(
+                "SELECT name FROM prefix_attribute_group_lang WHERE id_attribute_group = $groupId AND id_lang = " . (int)$context->getLanguageId()
+            );
             $facet = new Facet;
             $facetIdentifier = 'attributeGroup' . $groupId;
             $facet
@@ -313,7 +349,7 @@ class ProductLister implements ProductListerInterface
             ;
             foreach ($attributes as $attributeId) {
                 $filter = new AttributeFilter($groupId, $attributeId);
-                $facet->addFilter($filter);
+                $facet->addFilter($this->setAttributeFilterLabel($context, $filter));
             }
             $updatedFilters->addFacet(
                 $this->mergeFacets(

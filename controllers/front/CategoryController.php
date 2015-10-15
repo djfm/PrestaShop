@@ -25,6 +25,7 @@
  */
 
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryPresenter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
@@ -337,8 +338,7 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
             $result->getProducts()
         );
 
-        $this->query = (new Adapter_ProductQueryPresenter())->present(
-            $queryContext,
+        $this->query = (new QueryPresenter())->present(
             $result->getUpdatedFilters()
         );
 
