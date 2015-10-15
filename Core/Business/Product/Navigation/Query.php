@@ -9,6 +9,11 @@ class Query
 
     public function addFacet(Facet $facet)
     {
+        // Provide a default to avoid people
+        // accidentally displaying full catalog on one page :)
+        $this->pagination = new PaginationQuery;
+        $this->pagination->setPage(1)->setResultsPerPage(10);
+
         $this->facets[] = $facet;
         return $this;
     }

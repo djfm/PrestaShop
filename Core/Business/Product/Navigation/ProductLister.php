@@ -123,6 +123,12 @@ class ProductLister implements ProductListerInterface
         if (!empty($queryParts['orderBy'])) {
             $sql .= " ORDER BY {$queryParts['orderBy']}";
         }
+        if (!empty($queryParts['limit'])) {
+            $sql .= " LIMIT {$queryParts['limit']}";
+            if (!empty($queryParts['offset'])) {
+                $sql .= " OFFSET {$queryParts['offset']}";
+            }
+        }
         return $this->addDbPrefix($sql);
     }
 
@@ -292,6 +298,11 @@ class ProductLister implements ProductListerInterface
     {
         $queryParts = $this->buildQueryParts($context, $query);
         $queryParts['select'] = 'DISTINCT product.*, product_lang.*';
+        $rpp = (int)$query->getPagination()->getResultsPerPage();
+        $p   = (int)$query->getPagination()->getPage();
+        $queryParts['limit']  = $rpp;
+        $queryParts['offset'] = $rpp * ($p - 1);
+
         $sql = $this->assembleQueryParts($queryParts);
 
         $products = $this->db->select($sql);

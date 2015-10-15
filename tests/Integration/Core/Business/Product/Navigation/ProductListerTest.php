@@ -31,8 +31,6 @@ class ProductListerTest extends IntegrationTestCase
             ->setShopId($psContext->shop->id)
             ->setLanguageId($psContext->language->id)
         ;
-        $this->pagination = new PaginationQuery;
-        $this->pagination->setPage(1)->setResultsPerPage(2);
     }
 
     public function test_Products_Are_Found_By_Category()
@@ -50,6 +48,56 @@ class ProductListerTest extends IntegrationTestCase
         );
         $this->assertCount(2, $result->getProducts());
     }
+
+    public function test_pagination_limits_number_of_results()
+    {
+        $query      = new Query;
+        $facet      = new Facet;
+
+        $facet->addFilter(new CategoryFilter(3, true));
+        $query->addFacet($facet);
+
+        $result = $this->lister->listProducts($this->context, $query);
+        $this->assertCount(7, $result->getProducts());
+
+        $pagination = new PaginationQuery;
+        $pagination->setPage(1)->setResultsPerPage(2);
+        $query->setPagination($pagination);
+
+        $result = $this->lister->listProducts($this->context, $query);
+
+        $this->assertCount(2, $result->getProducts());
+    }
+
+    public function test_pagination_takes_requested_page_into_account()
+    {
+        $query      = new Query;
+        $facet      = new Facet;
+
+        $facet->addFilter(new CategoryFilter(3, true));
+        $query->addFacet($facet);
+
+        $pagination = new PaginationQuery;
+
+        $pagination->setPage(1)->setResultsPerPage(2);
+        $query->setPagination($pagination);
+        $firstTwoProducts = $this
+            ->lister
+            ->listProducts($this->context, $query)
+            ->getProducts()
+        ;
+
+        $pagination->setPage(2)->setResultsPerPage(2);
+        $query->setPagination($pagination);
+        $nextTwoProducts = $this
+            ->lister
+            ->listProducts($this->context, $query)
+            ->getProducts()
+        ;
+
+        $this->assertNotSame($firstTwoProducts, $nextTwoProducts);
+    }
+
 
     public function test_Products_Are_Found_By_Category_And_Filters_Are_Updated()
     {
