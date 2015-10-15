@@ -325,6 +325,9 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         }
 
         $pagination = new PaginationQuery;
+        $pagination->setResultsPerPage(
+            (int)Configuration::get('PS_PRODUCTS_PER_PAGE')
+        );
         $query->setPagination($pagination);
 
         $queryContext = $this->getProductQueryContext();
