@@ -339,6 +339,16 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
             $result->getUpdatedFilters()
         );
 
+        $sort_options = [];
+        foreach ($result->getSortOptions() as $sortOption) {
+            $option = $sortOption->toArray();
+            $sort_options[] = [
+                'enabled' => $sortOption == $query->getSortOption(),
+                'option'  => $option
+            ];
+        }
+        $this->context->smarty->assign('sort_options', $sort_options);
+
         $this->addColorsToProductList($this->cat_products);
 
         foreach ($this->cat_products as &$product) {

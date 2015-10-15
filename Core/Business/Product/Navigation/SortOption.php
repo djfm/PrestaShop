@@ -47,4 +47,13 @@ class SortOption
     {
         return $this->sortOrder;
     }
+
+    public function toArray()
+    {
+        return [
+            'fieldName' => $this->getFieldName(),
+            'sortOrder' => $this->getSortOrder(),
+            'label'     => $this->getLabel()
+        ];
+    }
 }
