@@ -14,7 +14,13 @@ class QueryResult
      * The total number of pages for this query.
      * @var int
      */
-    private $totalPages;
+    private $pagesCount;
+
+    /**
+     * The total number of results
+     * @var int
+     */
+    private $totalResultsCount;
 
     /**
      * The index of the returned page.
@@ -39,15 +45,31 @@ class QueryResult
         return $this->products;
     }
 
-    public function setTotalPages($totalPages)
+    public function setPagesCount($pagesCount)
     {
-        $this->totalPages = $totalPages;
+        $this->pagesCount = $pagesCount;
         return $this;
     }
 
-    public function getTotalPages()
+    public function getPagesCount()
     {
-        return $this->totalPages;
+        return $this->pagesCount;
+    }
+
+    public function setTotalResultsCount($totalResultsCount)
+    {
+        $this->totalResultsCount = $totalResultsCount;
+        return $this;
+    }
+
+    public function getTotalResultsCount()
+    {
+        return $this->totalResultsCount;
+    }
+
+    public function getResultsCount()
+    {
+        return count($this->getProducts());
     }
 
     public function setPage($page)

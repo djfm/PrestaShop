@@ -69,6 +69,25 @@ class ProductListerTest extends IntegrationTestCase
         $this->assertCount(2, $result->getProducts());
     }
 
+    public function test_pagination_gets_total_number_of_results()
+    {
+        $query      = new Query;
+        $facet      = new Facet;
+
+        $facet->addFilter(new CategoryFilter(3, true));
+        $query->addFacet($facet);
+        $pagination = new PaginationQuery;
+        $pagination->setPage(1)->setResultsPerPage(2);
+        $query->setPagination($pagination);
+
+        $result = $this->lister->listProducts($this->context, $query);
+
+        $this->assertEquals(2, $result->getResultsCount());
+        $this->assertEquals(1, $result->getPage());
+        $this->assertEquals(7, $result->getTotalResultsCount());
+        $this->assertEquals(4, $result->getPagesCount());
+    }
+
     public function test_pagination_takes_requested_page_into_account()
     {
         $query      = new Query;

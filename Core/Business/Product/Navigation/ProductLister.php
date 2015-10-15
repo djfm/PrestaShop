@@ -309,6 +309,14 @@ class ProductLister implements ProductListerInterface
 
         $result = new QueryResult;
         $result->setProducts($products);
+        $result->setPage($p);
+
+        unset($queryParts['limit']);
+        $queryParts['select'] = 'COUNT(DISTINCT product.id_product)';
+        $totalResultsCount = (int)$this->getDbValue($this->assembleQueryParts($queryParts));
+
+        $result->setTotalResultsCount($totalResultsCount);
+        $result->setPagesCount(ceil($totalResultsCount / $rpp));
 
         $result->setUpdatedFilters($this->buildUpdatedFilters(
             $context, $query
