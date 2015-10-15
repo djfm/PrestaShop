@@ -6,6 +6,7 @@ class Query
 {
     private $facets = [];
     private $pagination;
+    private $sortOption;
 
     public function __construct()
     {
@@ -60,5 +61,16 @@ class Query
     public function getPagination()
     {
         return $this->pagination;
+    }
+
+    public function setSortOption(SortOption $sortOption)
+    {
+        $this->sortOption = $sortOption;
+        return $this;
+    }
+
+    public function getSortOption()
+    {
+        return $this->sortOption;
     }
 }

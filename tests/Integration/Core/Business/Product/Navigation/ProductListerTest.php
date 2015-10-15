@@ -6,6 +6,7 @@ use PrestaShop\PrestaShop\Tests\TestCase\IntegrationTestCase;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryContext;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\SortOption;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AttributeFilter;
@@ -47,6 +48,34 @@ class ProductListerTest extends IntegrationTestCase
             $result
         );
         $this->assertCount(2, $result->getProducts());
+    }
+
+    public function test_products_are_sorted_by_name()
+    {
+        $query      = new Query;
+        $facet      = new Facet;
+
+        $facet->addFilter(new CategoryFilter(4, true));
+        $query->addFacet($facet);
+
+        $nameAsc    = new SortOption('product_lang.name', 'ASC' , 'Product A to Z');
+        $nameDesc   = new SortOption('product_lang.name', 'DESC', 'Product Z to A');
+
+        $query->setSortOption($nameAsc);
+        $products = $this
+            ->lister
+            ->listProducts($this->context, $query)
+            ->getProducts()
+        ;
+        $this->assertTrue($products[0]['name'] < $products[1]['name']);
+
+        $query->setSortOption($nameDesc);
+        $products = $this
+            ->lister
+            ->listProducts($this->context, $query)
+            ->getProducts()
+        ;
+        $this->assertTrue($products[0]['name'] > $products[1]['name']);
     }
 
     public function test_pagination_limits_number_of_results()

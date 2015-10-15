@@ -301,8 +301,8 @@ class ProductLister implements ProductListerInterface
     private function setSortOptions(QueryResult $result)
     {
         $result->setSortOptions([
-            new SortOption('product_lang.name', 'ASC', 'Product A to Z'),
-            new SortOption('product_lang.name', 'DESC', 'Product Z to A')
+            new SortOption('product_lang.name', 'ASC'   , 'Product A to Z'),
+            new SortOption('product_lang.name', 'DESC'  , 'Product Z to A')
         ]);
     }
 
@@ -314,6 +314,10 @@ class ProductLister implements ProductListerInterface
         $p   = (int)$query->getPagination()->getPage();
         $queryParts['limit']  = $rpp;
         $queryParts['offset'] = $rpp * ($p - 1);
+
+        if (($sortOption = $query->getSortOption())) {
+            $queryParts['orderBy'] = $sortOption->getFieldName() . ' ' . $sortOption->getSortOrder();
+        }
 
         $sql = $this->assembleQueryParts($queryParts);
 
