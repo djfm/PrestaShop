@@ -2,10 +2,8 @@
 
 namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation;
 
-use Adapter_ServiceLocator;
 use Core_Business_ConfigurationInterface;
 use Core_Foundation_Database_DatabaseInterface;
-use Adapter_ProductAssembler;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\ProductListerInterface;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryContext;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
