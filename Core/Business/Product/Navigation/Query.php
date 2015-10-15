@@ -7,13 +7,17 @@ class Query
     private $facets = [];
     private $pagination;
 
-    public function addFacet(Facet $facet)
+    public function __construct()
     {
         // Provide a default to avoid people
         // accidentally displaying full catalog on one page :)
-        $this->pagination = new PaginationQuery;
-        $this->pagination->setPage(1)->setResultsPerPage(10);
+        $pagination = new PaginationQuery;
+        $pagination->setPage(1)->setResultsPerPage(10);
+        $this->setPagination($pagination);
+    }
 
+    public function addFacet(Facet $facet)
+    {
         $this->facets[] = $facet;
         return $this;
     }
