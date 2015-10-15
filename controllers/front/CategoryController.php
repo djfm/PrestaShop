@@ -333,7 +333,10 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
             $query
         );
 
-        $this->cat_products = $result->getProducts();
+        $this->cat_products = $this->assembleProducts(
+            $result->getProducts()
+        );
+
         $this->query = (new Adapter_ProductQueryPresenter())->present(
             $queryContext,
             $result->getUpdatedFilters()

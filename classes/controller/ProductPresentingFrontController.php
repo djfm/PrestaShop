@@ -44,4 +44,32 @@ abstract class ProductPresentingFrontControllerCore extends FrontController
             ->setShopId($this->context->shop->id)
         ;
     }
+
+    protected function assembleProduct(array $product)
+    {
+        $nb_days_new_product = Configuration::get('PS_NB_DAYS_NEW_PRODUCT');
+        if (!is_int($nb_days_new_product)) {
+            $nb_days_new_product = 20;
+        }
+
+        if (empty($product['id_product_attribute'])) {
+            $product['id_product_attribute'] = 0;
+        }
+
+        if (!array_key_exists('new', $product)) {
+            $productAge = round((time() - strtotime($product['date_add'])) / 24 / 3600);
+            $product['new'] = $productAge < $nb_days_new_product;
+        }
+
+        return Product::getProductProperties(
+            $this->context->language->id,
+            $product,
+            $this->context
+        );
+    }
+
+    protected function assembleProducts(array $products)
+    {
+        return array_map([$this, 'assembleProduct'], $products);
+    }
 }
