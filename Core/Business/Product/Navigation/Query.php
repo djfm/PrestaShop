@@ -9,11 +9,7 @@ class Query
 
     public function __construct()
     {
-        // Provide a default to avoid people
-        // accidentally displaying full catalog on one page :)
-        $pagination = new PaginationQuery;
-        $pagination->setPage(1)->setResultsPerPage(10);
-        $this->setPagination($pagination);
+        $this->pagination = new PaginationQuery;
     }
 
     public function addFacet(Facet $facet)

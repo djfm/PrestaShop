@@ -8,13 +8,13 @@ class PaginationQuery
      * The number of the requested page.
      * @var int
      */
-    private $page;
+    private $page = 1;
 
     /**
      * The number of results per page to return.
      * @var int
      */
-    private $resultsPerPage;
+    private $resultsPerPage = 12;
 
     public function setPage($page)
     {
