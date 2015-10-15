@@ -73,9 +73,12 @@ class ProductLister implements ProductListerInterface
     {
         $cumulativeConditions = [];
         foreach ($query->getFacets() as $i => $facet) {
-            $cumulativeConditions[] = '(' . implode(' OR ', array_map(function (AbstractProductFilter $filter) use ($i) {
-                return $filter->getQueryHelper()->getConditionSQLForQuery($filter, $i);
-            }, $facet->getFilters())) . ')';
+            $cumulativeConditions[] = '(' . implode(
+                ' OR ',
+                array_map(function (AbstractProductFilter $filter) use ($i) {
+                    return $filter->getQueryHelper()->getConditionSQLForQuery($filter, $i);
+                }, $facet->getFilters())
+            ) . ')';
         }
         return implode(' AND ', $cumulativeConditions);
     }
