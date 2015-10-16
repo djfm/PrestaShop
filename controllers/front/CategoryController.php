@@ -325,11 +325,11 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         );
         $query->setPagination($pagination);
 
+        $currentSortOption = null;
         if (($sort_option = Tools::getValue('sort_option'))) {
-            $sort_option = json_decode($sort_option, true);
-            $sortOption = new SortOption;
-            $sortOption->fromArray($sort_option);
-            $query->setSortOption($sortOption);
+            $currentSortOption = new SortOption;
+            $currentSortOption->fromArray(json_decode($sort_option, true));
+            $query->setSortOption($currentSortOption);
         }
 
         $queryContext = $this->getProductQueryContext();

@@ -5,6 +5,7 @@
       form  = "navigation"
       name  = "sort_option"
       value = "{$option.serialized|escape:'javascript'}"
+      {if $option.enabled} class = "current" {/if}
     >
       {$option.label}
     </button>
