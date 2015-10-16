@@ -27,6 +27,7 @@
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryPresenter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\SortOption;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
 
@@ -324,6 +325,13 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         );
         $query->setPagination($pagination);
 
+        if (($sort_option = Tools::getValue('sort_option'))) {
+            $sort_option = json_decode($sort_option, true);
+            $sortOption = new SortOption;
+            $sortOption->fromArray($sort_option);
+            $query->setSortOption($sortOption);
+        }
+
         $queryContext = $this->getProductQueryContext();
 
         $result = $this->getProductLister()->listProducts(
@@ -341,10 +349,10 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
 
         $sort_options = [];
         foreach ($result->getSortOptions() as $sortOption) {
-            $option = $sortOption->toArray();
             $sort_options[] = [
                 'enabled' => $sortOption == $query->getSortOption(),
-                'option'  => $option
+                'serialized'  => json_encode($sortOption->toArray()),
+                'label'   => $sortOption->getLabel()
             ];
         }
         $this->context->smarty->assign('sort_options', $sort_options);

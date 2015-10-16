@@ -2,6 +2,8 @@
 
 namespace PrestaShop\PrestaShop\Core\Business\Product\Navigation;
 
+use Exception;
+
 class SortOption
 {
     private $fieldName;
@@ -28,6 +30,9 @@ class SortOption
 
     public function setFieldName($fieldName)
     {
+        if ($fieldName !== null && !preg_match('/^\w+(?:\.\w+)?$/', $fieldName)) {
+            throw new Exception('Invalid fieldName for SortOption.');
+        }
         $this->fieldName = $fieldName;
         return $this;
     }
@@ -39,6 +44,9 @@ class SortOption
 
     public function setSortOrder($sortOrder)
     {
+        if ($sortOrder !== 'ASC' && $sortOrder !== 'DESC' && $sortOrder !== null) {
+            throw new Exception('Invalid sortOrder for SortOption.');
+        }
         $this->sortOrder = $sortOrder;
         return $this;
     }
@@ -55,5 +63,14 @@ class SortOption
             'sortOrder' => $this->getSortOrder(),
             'label'     => $this->getLabel()
         ];
+    }
+
+    public function fromArray(array $arr)
+    {
+        return $this
+            ->setFieldName($arr['fieldName'])
+            ->setSortOrder($arr['sortOrder'])
+            ->setLabel($arr['label'])
+        ;
     }
 }
