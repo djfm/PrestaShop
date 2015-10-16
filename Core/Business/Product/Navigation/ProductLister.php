@@ -10,6 +10,7 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\SortOption;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationQuery;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\PaginationResult;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AbstractProductFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\CategoryFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryHelper\CategoriesQueryHelper;
@@ -325,14 +326,19 @@ class ProductLister implements ProductListerInterface
 
         $result = new QueryResult;
         $result->setProducts($products);
-        $result->setPage($p);
+
+        $pagination = new PaginationResult;
+        $result->setPaginationResult($pagination);
+
+        $pagination->setPage($p);
 
         unset($queryParts['limit']);
         $queryParts['select'] = 'COUNT(DISTINCT product.id_product)';
         $totalResultsCount = (int)$this->getDbValue($this->assembleQueryParts($queryParts));
 
-        $result->setTotalResultsCount($totalResultsCount);
-        $result->setPagesCount(ceil($totalResultsCount / $rpp));
+        $pagination->setTotalResultsCount($totalResultsCount);
+        $pagination->setPagesCount(ceil($totalResultsCount / $rpp));
+        $pagination->setResultsCount(count($result->getProducts()));
 
         $result->setUpdatedFilters($this->buildUpdatedFilters(
             $context, $query

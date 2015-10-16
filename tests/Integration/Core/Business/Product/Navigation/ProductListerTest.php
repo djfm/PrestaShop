@@ -42,7 +42,7 @@ class ProductListerTest extends IntegrationTestCase
         $facet->addFilter(new CategoryFilter(4, true));
         $query->addFacet($facet);
 
-        $result = $this->lister->listProducts($this->context, $query, $this->pagination);
+        $result = $this->lister->listProducts($this->context, $query);
         $this->assertInstanceOf(
             'PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryResult',
             $result
@@ -111,10 +111,10 @@ class ProductListerTest extends IntegrationTestCase
 
         $result = $this->lister->listProducts($this->context, $query);
 
-        $this->assertEquals(2, $result->getResultsCount());
-        $this->assertEquals(1, $result->getPage());
-        $this->assertEquals(7, $result->getTotalResultsCount());
-        $this->assertEquals(4, $result->getPagesCount());
+        $this->assertEquals(2, $result->getPaginationResult()->getResultsCount());
+        $this->assertEquals(1, $result->getPaginationResult()->getPage());
+        $this->assertEquals(7, $result->getPaginationResult()->getTotalResultsCount());
+        $this->assertEquals(4, $result->getPaginationResult()->getPagesCount());
     }
 
     public function test_pagination_takes_requested_page_into_account()

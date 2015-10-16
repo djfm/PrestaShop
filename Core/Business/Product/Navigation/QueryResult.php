@@ -11,24 +11,6 @@ class QueryResult
     private $products = [];
 
     /**
-     * The total number of pages for this query.
-     * @var int
-     */
-    private $pagesCount;
-
-    /**
-     * The total number of results
-     * @var int
-     */
-    private $totalResultsCount;
-
-    /**
-     * The index of the returned page.
-     * @var int
-     */
-    private $page;
-
-    /**
      * Next potential query.
      * @var ProductQuery
      */
@@ -40,6 +22,16 @@ class QueryResult
      */
     private $sortOptions = [];
 
+    /**
+     * @var PaginationResult
+     */
+    private $paginationResult;
+
+    public function __construct()
+    {
+        $this->paginationResult = new PaginationResult;
+    }
+
     public function setProducts(array $products)
     {
         $this->products = $products;
@@ -49,44 +41,6 @@ class QueryResult
     public function getProducts()
     {
         return $this->products;
-    }
-
-    public function setPagesCount($pagesCount)
-    {
-        $this->pagesCount = $pagesCount;
-        return $this;
-    }
-
-    public function getPagesCount()
-    {
-        return $this->pagesCount;
-    }
-
-    public function setTotalResultsCount($totalResultsCount)
-    {
-        $this->totalResultsCount = $totalResultsCount;
-        return $this;
-    }
-
-    public function getTotalResultsCount()
-    {
-        return $this->totalResultsCount;
-    }
-
-    public function getResultsCount()
-    {
-        return count($this->getProducts());
-    }
-
-    public function setPage($page)
-    {
-        $this->page = $page;
-        return $this;
-    }
-
-    public function getPage()
-    {
-        return $this->page;
     }
 
     public function setUpdatedFilters(Query $updatedFilters)
@@ -116,5 +70,16 @@ class QueryResult
     {
         $this->sortOptions[] = $option;
         return $this;
+    }
+
+    public function setPaginationResult(PaginationResult $paginationResult)
+    {
+        $this->paginationResult = $paginationResult;
+        return $this;
+    }
+
+    public function getPaginationResult()
+    {
+        return $this->paginationResult;
     }
 }
