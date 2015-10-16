@@ -67,4 +67,18 @@ class PaginationResultTest extends PHPUnit_Framework_Testcase
             ['type' => 'next'       , 'clickable' => false    , 'page' => 10,    'current' => false],
         ], $this->pagination->buildLinks());
     }
+
+    public function test_pagination_context_makes_sense_when_only_one_page()
+    {
+        $this->pagination
+            ->setPagesCount(1)
+            ->setPage(1)
+        ;
+
+        $this->assertEquals([
+            ['type' => 'previous'   , 'clickable' => false    , 'page' => 1,     'current' => false],
+            ['type' => 'page'       , 'clickable' => false    , 'page' => 1,     'current' => true],
+            ['type' => 'next'       , 'clickable' => false    , 'page' => 1,     'current' => false],
+        ], $this->pagination->buildLinks());
+    }
 }

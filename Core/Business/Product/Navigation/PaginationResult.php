@@ -30,7 +30,7 @@ class PaginationResult
 
     public function setPagesCount($pagesCount)
     {
-        $this->pagesCount = $pagesCount;
+        $this->pagesCount = (int)$pagesCount;
         return $this;
     }
 
@@ -52,7 +52,7 @@ class PaginationResult
 
     public function setResultsCount($resultsCount)
     {
-        $this->resultsCount = $resultsCount;
+        $this->resultsCount = (int)$resultsCount;
         return $this;
     }
 
@@ -63,7 +63,7 @@ class PaginationResult
 
     public function setPage($page)
     {
-        $this->page = $page;
+        $this->page = (int)$page;
         return $this;
     }
 
@@ -74,7 +74,7 @@ class PaginationResult
 
     private function buildPageLink($page, $type = 'page')
     {
-        $current = (int)$page === (int)$this->getPage();
+        $current = $page === $this->getPage();
         return [
             'type' => $type,
             'page' => $page,
@@ -99,6 +99,10 @@ class PaginationResult
 
         $addPageLink = function ($page) use (&$links) {
             static $lastPage = null;
+
+            if ($page < 1 || $page > $this->getPagesCount()) {
+                return;
+            }
 
             if (null !== $lastPage && $page > $lastPage + 1) {
                 $links[] = $this->buildSpacer();
