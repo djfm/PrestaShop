@@ -17,40 +17,22 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryHelper\Categorie
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter\AttributeFilter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryHelper\AttributesQueryHelper;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryResult;
+use PrestaShop\PrestaShop\Core\Foundation\Database\AutoPrefixingDatabase;
 
 class ProductLister implements ProductListerInterface
 {
-    private $configuration;
     private $db;
 
     public function __construct(
-        Core_Business_ConfigurationInterface $configuration,
-        Core_Foundation_Database_DatabaseInterface $db
+        AutoPrefixingDatabase $db
     ) {
-        $this->configuration    = $configuration;
-        $this->db               = $db;
-    }
-
-    private function addDbPrefix($sql)
-    {
-        return str_replace('prefix_', $this->configuration->get('_DB_PREFIX_'), $sql);
-    }
-
-    private function select($sql)
-    {
-        return $this->db->select($this->addDbPrefix($sql));
-    }
-
-    private function getDbValue($sql)
-    {
-        $rows = $this->select($sql);
-        return current(current($rows));
+        $this->db = $db;
     }
 
     private function setCategoryFilterLabel(QueryContext $context, CategoryFilter $filter)
     {
         $filter->setLabel(
-            $this->getDbValue(
+            $this->db->getValue(
                 'SELECT name FROM prefix_category_lang WHERE id_category = '
                 . (int)$filter->getCategoryId()
                 . ' AND id_lang = ' . (int)$context->getLanguageId()
@@ -62,7 +44,7 @@ class ProductLister implements ProductListerInterface
     private function setAttributeFilterLabel(QueryContext $context, AttributeFilter $filter)
     {
         $filter->setLabel(
-            $this->getDbValue(
+            $this->db->getValue(
                 'SELECT name FROM prefix_attribute_lang WHERE id_attribute = '
                 . (int)$filter->getAttributeId()
                 . ' AND id_lang = ' . (int)$context->getLanguageId()
@@ -134,7 +116,7 @@ class ProductLister implements ProductListerInterface
                 $sql .= " OFFSET {$queryParts['offset']}";
             }
         }
-        return $this->addDbPrefix($sql);
+        return $this->db->addPrefix($sql);
     }
 
     private function getTopLevelCategoryId(Query $query)
@@ -146,9 +128,9 @@ class ProductLister implements ProductListerInterface
             foreach ($facet->getFilters() as $filter) {
                 if ($filter instanceof CategoryFilter) {
                     $id = (int)$filter->getCategoryId();
-                    $depth = (int)$this->db->select(
-                        $this->addDbPrefix("SELECT level_depth FROM prefix_category WHERE id_category = $id")
-                    )[0]['level_depth'];
+                    $depth = (int)$this->db->getValue(
+                        "SELECT level_depth FROM prefix_category WHERE id_category = $id"
+                    );
                     if ($minDepth === null || $depth < $minDepth) {
                         $minDepth = $depth;
                         $categoryId = $id;
@@ -278,7 +260,7 @@ class ProductLister implements ProductListerInterface
         }
 
         foreach ($groups as $groupId => $attributes) {
-            $groupName = $this->getDbValue(
+            $groupName = $this->db->getValue(
                 "SELECT name FROM prefix_attribute_group_lang WHERE id_attribute_group = $groupId AND id_lang = " . (int)$context->getLanguageId()
             );
             $facet = new Facet;
@@ -334,7 +316,7 @@ class ProductLister implements ProductListerInterface
 
         unset($queryParts['limit']);
         $queryParts['select'] = 'COUNT(DISTINCT product.id_product)';
-        $totalResultsCount = (int)$this->getDbValue($this->assembleQueryParts($queryParts));
+        $totalResultsCount = (int)$this->db->getValue($this->assembleQueryParts($queryParts));
 
         $pagination->setTotalResultsCount($totalResultsCount);
         $pagination->setPagesCount(ceil($totalResultsCount / $rpp));
