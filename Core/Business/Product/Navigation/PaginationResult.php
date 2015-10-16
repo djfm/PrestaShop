@@ -74,8 +74,7 @@ class PaginationResult
 
     private function buildPageLink($page, $type = 'page')
     {
-        $current = $page === $this->getPage();
-
+        $current = (int)$page === (int)$this->getPage();
         return [
             'type' => $type,
             'page' => $page,

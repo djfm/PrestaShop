@@ -36,6 +36,10 @@
             {include './_partials/sort_options.tpl' sort_options=$sort_options}
           {/block}
 
+          {block name="pagination"}
+            {include './_partials/pagination.tpl' pagination=$pagination}
+          {/block}
+
           <div class="products">
             {foreach from=$products item="product"}
               {block name="product_miniature"}

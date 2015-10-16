@@ -323,6 +323,7 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
         $pagination->setResultsPerPage(
             (int)Configuration::get('PS_PRODUCTS_PER_PAGE')
         );
+        $pagination->setPage(max(1, (int)Tools::getValue('page')));
         $query->setPagination($pagination);
 
         $currentSortOption = null;
@@ -355,7 +356,9 @@ class CategoryControllerCore extends ProductPresentingFrontControllerCore
                 'label'   => $sortOption->getLabel()
             ];
         }
+
         $this->context->smarty->assign('sort_options', $sort_options);
+        $this->context->smarty->assign('pagination', $result->getPaginationResult()->buildLinks());
 
         $this->addColorsToProductList($this->cat_products);
 
