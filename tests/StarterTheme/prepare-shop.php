@@ -36,6 +36,32 @@ if (!Configuration::get('PS_REWRITING_SETTINGS')) {
 
 echo "- URL rewriting enabled\n";
 
+//Enable returns
+
+function enableReturns()
+{
+    Configuration::updateValue('PS_ORDER_RETURN', 1);
+}
+
+if (!Configuration::get('PS_ORDER_RETURN')) {
+    enableReturns();
+}
+
+echo "- Returns enabled\n";
+
+//Enable returns
+
+function enableVouchers()
+{
+    Configuration::updateValue('PS_CART_RULE_FEATURE_ACTIVE', 1);
+}
+
+if (!CartRule::isFeatureActive()) {
+    enableVouchers();
+}
+
+echo "- Vouchers enabled\n";
+
 // Setup modules
 
 function disableModule($moduleName)
