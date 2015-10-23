@@ -138,8 +138,11 @@ abstract class ProductListingFrontController extends ProductPresentingFrontContr
             $params['page'] = $page;
         }
 
+        $url = "$_SERVER[REQUEST_SCHEME]://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
         $queryString = urldecode(http_build_query($params));
-        $url = "$_SERVER[REQUEST_SCHEME]://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]?$queryString";
+        if ($queryString) {
+            $url .= "?$queryString";
+        }
 
         return $url;
     }
