@@ -39,12 +39,6 @@ class CategoryControllerCore extends ProductListingFrontController
     /** @var bool If set to false, customer cannot view the current category. */
     public $customer_access = true;
 
-    /** @var int Number of products in the current page. */
-    protected $nbProducts;
-
-    /** @var array Products to be displayed in the current page . */
-    protected $cat_products;
-
     /**
      * Sets default medias for this controller
      */
