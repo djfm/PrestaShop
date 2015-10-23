@@ -40,9 +40,19 @@ class SuppliersQueryHelper extends AbstractFacetQueryHelper
         $facet->clearFilters();
 
         foreach ($rows as $row) {
+            $id = (int)$row['id_supplier'];
+
+            // Don't include supplier filter if it is part of the facet
+            // as a whole.
+            if (isset($initialFacet->getCondition()['id_supplier'])) {
+                if ($initialFacet->getCondition()['id_supplier'] === $id) {
+                    continue;
+                }
+            }
+
             $filter = new Filter;
             $filter
-                ->setCondition(['id_supplier' => (int)$row['id_supplier']])
+                ->setCondition(['id_supplier' => $id])
                 ->setMagnitude((int)$row['magnitude'])
                 ->setLabel($row['name'])
                 ->setEnabled(false)

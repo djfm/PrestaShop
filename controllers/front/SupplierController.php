@@ -113,11 +113,17 @@ class SupplierControllerCore extends ProductListingFrontController
 
     public function getDefaultQuery()
     {
+        $id = (int)Tools::getValue('id_supplier');
+
         return (new Query)
             ->addFacet((new Facet)
                 ->setLabel($this->l('Supplier'))
                 ->setIdentifier('suppliers')
-                ->setCondition(['id_supplier' => (int)Tools::getValue('id_supplier')])
+                ->setCondition(['id_supplier' => $id])
+                ->addFilter((new Filter)
+                    ->setCondition(['id_supplier' => $id])
+                    ->setEnabled()
+                )
             )
         ;
     }
