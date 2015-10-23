@@ -73,4 +73,12 @@ class Query
     {
         return $this->sortOption;
     }
+
+    public function sortFacets()
+    {
+        usort($this->facets, function (Facet $a, Facet $b) {
+            return $a->getPosition() - $b->getPosition();
+        });
+        return $this;
+    }
 }

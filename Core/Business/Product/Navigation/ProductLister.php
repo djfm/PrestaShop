@@ -152,6 +152,22 @@ class ProductLister implements ProductListerInterface
             $facets[] = $facet;
         }
 
+        /**
+         * Suppliers
+         */
+
+         $suppliersFacet = new Facet($this->db, $context);
+         $suppliersFacet
+             ->setLabel('Supplier')
+             ->setIdentifier('suppliers')
+         ;
+
+         $facets[] = $suppliersFacet;
+
+         foreach ($facets as $position => $facet) {
+             $facet->setPosition($position);
+         }
+
         return $facets;
     }
 
@@ -188,7 +204,7 @@ class ProductLister implements ProductListerInterface
             }
         }
 
-        return $updatedFilters;
+        return $updatedFilters->sortFacets();
     }
 
     private function setSortOptions(QueryResult $result)

@@ -13,6 +13,8 @@ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryURLSerializer;
 
 abstract class ProductListingFrontController extends ProductPresentingFrontController
 {
+    protected $products;
+
     protected function getAutoPrefixingDatabase()
     {
         return Adapter_ServiceLocator::get(
@@ -83,12 +85,13 @@ abstract class ProductListingFrontController extends ProductPresentingFrontContr
     {
         $query = new Query;
 
-        foreach ($rawFacets as $rawFacet) {
+        foreach ($rawFacets as $position => $rawFacet) {
             $facet = new Facet;
             $facet
                 ->setIdentifier($rawFacet['identifier'])
                 ->setLabel($rawFacet['label'])
                 ->setCondition(json_decode($rawFacet['condition'], true))
+                ->setPosition($position)
             ;
             $query->addFacet($facet);
         }
@@ -188,5 +191,35 @@ abstract class ProductListingFrontController extends ProductPresentingFrontContr
         }
 
         return $templateVariables;
+    }
+
+    abstract public function getDefaultQuery();
+
+    public function assignProductList()
+    {
+        $query = $this->getDefaultQuery();
+
+        $templateVariables = $this->fetchProductsAndGetRelatedTemplateVariables($query);
+
+        $this->addColorsToProductList($templateVariables['products']);
+
+        foreach ($templateVariables['products'] as &$product) {
+            if (isset($product['id_product_attribute']) && $product['id_product_attribute'] && isset($product['product_attribute_minimal_quantity'])) {
+                $product['minimal_quantity'] = $product['product_attribute_minimal_quantity'];
+            }
+        }
+
+        $this->products = $templateVariables['products'];
+
+        if ($this->ajax) {
+            ob_end_clean();
+            header('Content-Type: application/json');
+            die(json_encode([
+                'products'  => $this->render('catalog/products.tpl', $templateVariables),
+                'query_url' => $templateVariables['query_url']
+            ]));
+        } else {
+            $this->context->smarty->assign($templateVariables);
+        }
     }
 }

@@ -45,12 +45,6 @@ class CategoryControllerCore extends ProductListingFrontController
     /** @var array Products to be displayed in the current page . */
     protected $cat_products;
 
-    private function render($template, array $params)
-    {
-        $this->context->smarty->assign($params);
-        return $this->context->smarty->fetch($template);
-    }
-
     /**
      * Sets default medias for this controller
      */
@@ -198,36 +192,15 @@ class CategoryControllerCore extends ProductListingFrontController
     /**
      * Assigns product list template variables
      */
-    public function assignProductList()
+    public function getDefaultQuery()
     {
-        $query = (new Query)
+        return (new Query)
             ->addFacet((new Facet)
                 ->setLabel($this->l('Category'))
                 ->setIdentifier('categories')
                 ->setCondition(['id_category' => (int)Tools::getValue('id_category')])
             )
         ;
-
-        $templateVariables = $this->fetchProductsAndGetRelatedTemplateVariables($query);
-
-        $this->addColorsToProductList($templateVariables['products']);
-
-        foreach ($templateVariables['products'] as &$product) {
-            if (isset($product['id_product_attribute']) && $product['id_product_attribute'] && isset($product['product_attribute_minimal_quantity'])) {
-                $product['minimal_quantity'] = $product['product_attribute_minimal_quantity'];
-            }
-        }
-
-        if ($this->ajax) {
-            ob_end_clean();
-            header('Content-Type: application/json');
-            die(json_encode([
-                'products'  => $this->render('catalog/products.tpl', $templateVariables),
-                'query_url' => $templateVariables['query_url']
-            ]));
-        } else {
-            $this->context->smarty->assign($templateVariables);
-        }
     }
 
     /**

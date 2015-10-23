@@ -10,6 +10,7 @@ class Facet
     private $identifier;
     private $condition;
     private $hidden;
+    private $position;
 
     public function addFilter(Filter $filter)
     {
@@ -92,5 +93,16 @@ class Facet
             return $this->filtersByIdentifier[$identifier];
         }
         return null;
+    }
+
+    public function setPosition($position)
+    {
+        $this->position = $position;
+        return $this;
+    }
+
+    public function getPosition()
+    {
+        return $this->position;
     }
 }

@@ -24,14 +24,16 @@
  * International Registered Trademark & Property of PrestaShop SA
  */
 
-class SupplierControllerCore extends ProductPresentingFrontControllerCore
+ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
+ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
+ use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter;
+
+class SupplierControllerCore extends ProductListingFrontController
 {
     public $php_self = 'supplier';
 
     /** @var Supplier */
     protected $supplier;
-    protected $supplier_products;
-    protected $nbProducts;
 
     public function canonicalRedirection($canonicalURL = '')
     {
@@ -88,21 +90,14 @@ class SupplierControllerCore extends ProductPresentingFrontControllerCore
      */
     protected function assignOne()
     {
-        $this->productSort();
-        $this->assignSortOptions();
         $this->assignProductList();
 
-        $products = array_map(function (array $product) {
-            return $this->prepareProductForTemplate($product);
-        }, $this->supplier_products);
-
-        if ($this->nbProducts <= 0) {
+        if (empty($this->products)) {
             $this->warning[] = $this->l('No products for this supplier.');
         }
 
         $this->context->smarty->assign([
             'supplier' => $this->objectSerializer->toArray($this->supplier),
-            'products' => $products,
         ]);
     }
 
@@ -116,74 +111,15 @@ class SupplierControllerCore extends ProductPresentingFrontControllerCore
         ]);
     }
 
-    public function assignProductList()
+    public function getDefaultQuery()
     {
-        $this->nbProducts = $this->supplier->getProducts($this->supplier->id, null, null, null, $this->orderBy, $this->orderWay, true);
-        $this->pagination((int)$this->nbProducts);
-        $this->supplier_products = $this->supplier->getProducts($this->supplier->id, $this->context->language->id, (int)$this->p, (int)$this->n, $this->orderBy, $this->orderWay);
-
-        $this->addColorsToProductList($this->supplier_products);
-
-        foreach ($this->supplier_products as &$product) {
-            if (isset($product['id_product_attribute']) && $product['id_product_attribute'] && isset($product['product_attribute_minimal_quantity'])) {
-                $product['minimal_quantity'] = $product['product_attribute_minimal_quantity'];
-            }
-        }
-    }
-
-    protected function getSortOptions()
-    {
-        $settings = $this->getProductPresentationSettings();
-
-        if ($settings->catalog_mode) {
-            $options = [];
-        } else {
-            $options = [
-                ['orderBy' => 'price', 'sortOrder' => 'asc', 'label' => $this->l('Increasing price')],
-                ['orderBy' => 'price', 'sortOrder' => 'desc', 'label' => $this->l('Decreasing price')],
-            ];
-        }
-
-        $options[] = ['orderBy' => 'name', 'sortOrder' => 'asc', 'label' => $this->l('Product name, A to Z')];
-        $options[] = ['orderBy' => 'name', 'sortOrder' => 'desc', 'label' => $this->l('Product name, Z to A')];
-
-        if (!$settings->catalog_mode && $settings->stock_management_enabled) {
-            $options[] = ['orderBy' => 'quantity', 'sortOrder' => 'desc', 'label' => $this->l('In stock')];
-        }
-
-        $options[] = ['orderBy' => 'reference', 'sortOrder' => 'asc', 'label' => $this->l('Product reference, A to Z')];
-        $options[] = ['orderBy' => 'reference', 'sortOrder' => 'desc', 'label' => $this->l('Product reference, Z to A')];
-
-        $pageURL = $this->context->link->getSupplierLink(
-            $this->supplier
-        );
-
-        $options = array_map(function ($option) use ($pageURL) {
-            $option['url'] = $pageURL . '?orderby=' . $option['orderBy'] . '&orderway=' . $option['sortOrder'];
-            $option['current'] = ($option['orderBy'] === Tools::getValue('orderby')) &&
-                                 ($option['sortOrder'] === Tools::getValue('orderway'))
-            ;
-            return $option;
-        }, $options);
-
-        return $options;
-    }
-
-    public function assignSortOptions()
-    {
-        $this->context->smarty->assign('sort_options', $this->getSortOptions());
-    }
-
-    public function prepareProductForTemplate(array $product)
-    {
-        $presenter = $this->getProductPresenter();
-        $settings = $this->getProductPresentationSettings();
-
-        return $presenter->presentForListing(
-            $settings,
-            $product,
-            $this->context->language
-        );
+        return (new Query)
+            ->addFacet((new Facet)
+                ->setLabel($this->l('Supplier'))
+                ->setIdentifier('suppliers')
+                ->setCondition(['id_supplier' => (int)Tools::getValue('id_supplier')])
+            )
+        ;
     }
 
     public function getTemplateVarSuppliers()

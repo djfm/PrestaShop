@@ -35,6 +35,11 @@ class FacetQueryHelperResolver
                 $this->db,
                 $this->context
             );
+        } else if ($facet->getIdentifier() === 'suppliers') {
+            return new FacetQueryHelper\SuppliersQueryHelper(
+                $this->db,
+                $this->context
+            );
         }
 
         throw new Exception(sprintf(

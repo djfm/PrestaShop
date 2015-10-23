@@ -171,6 +171,12 @@ class FrontControllerCore extends Controller
         $this->objectSerializer = new Adapter_ObjectSerializer();
     }
 
+    protected function render($template, array $params)
+    {
+        $this->context->smarty->assign($params);
+        return $this->context->smarty->fetch($template);
+    }
+
     /**
      * Check if the controller is available for the current user/visitor
      *
