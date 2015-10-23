@@ -168,6 +168,16 @@ class PrestaShopAutoload
         $this->index = $classes;
     }
 
+    private function hasNamespace($sourceCode)
+    {
+        foreach (token_get_all($sourceCode) as list($tokenType)) {
+            if (T_NAMESPACE === $tokenType) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Retrieve recursively all classes in a directory and its subdirectories
      *
@@ -191,7 +201,7 @@ class PrestaShopAutoload
                                 .'(?:\s+extends\s+'.$namespacePattern.'[a-z][a-z0-9_]*)?(?:\s+implements\s+'.$namespacePattern.'[a-z][\\a-z0-9_]*(?:\s*,\s*'.$namespacePattern.'[a-z][\\a-z0-9_]*)*)?\s*\{#i';
 
                     //DONT LOAD CLASS WITH NAMESPACE - PSR4 autoloaded from composer
-                    if (false === strpos($content, 'namespace ') && preg_match($pattern, $content, $m)) {
+                    if (!$this->hasNamespace($content) && preg_match($pattern, $content, $m)) {
                         $classes[$m['classname']] = array(
                             'path' => $path.$file,
                             'type' => trim($m[1]),

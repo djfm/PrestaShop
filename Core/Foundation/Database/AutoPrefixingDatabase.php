@@ -5,7 +5,7 @@ namespace PrestaShop\PrestaShop\Core\Foundation\Database;
 use Core_Business_ConfigurationInterface;
 use Core_Foundation_Database_DatabaseInterface;
 
-class AutoPrefixingDatabase
+class AutoPrefixingDatabase implements Core_Foundation_Database_DatabaseInterface
 {
     private $configuration;
     private $db;
@@ -32,5 +32,10 @@ class AutoPrefixingDatabase
     {
         $rows = $this->select($sql);
         return current(current($rows));
+    }
+
+    public function escape($value)
+    {
+        return $this->db->escape($value);
     }
 }

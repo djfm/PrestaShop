@@ -1,0 +1,31 @@
+#navigation
+  float left
+  margin-bottom small-padding
+  margin-right small-padding
+  .facet.hidden
+    display none
+  span.magnitude
+    display inline-block
+    &::before
+      content "("
+    &::after
+      content ")"
+  label.filter
+    display block
+
+#navigation-sort-options
+  margin-bottom small-padding
+  .current
+    font-weight bold
+
+.pagination
+  margin-bottom small-padding
+  ul
+    list-style none
+    margin 0
+    padding 0
+    li
+      display inline
+    li.current
+      button
+        font-weight bold

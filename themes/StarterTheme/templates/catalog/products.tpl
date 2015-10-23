@@ -2,8 +2,12 @@
   <section id="products">
     <h1>{l s='Products'}</h1>
 
-    {block name="sort_by"}
-      {include './_partials/sort-by.tpl' options=$sort_options}
+    {block name="filters"}
+      {include './_partials/navigation.tpl' query=$query}
+    {/block}
+
+    {block name="sort_options"}
+      {include './_partials/sort_options.tpl' sort_options=$sort_options}
     {/block}
 
     <div class="products">
@@ -13,5 +17,9 @@
         {/block}
       {/foreach}
     </div>
+
+    {block name="pagination"}
+      {include './_partials/pagination.tpl' pagination=$pagination}
+    {/block}
   </section>
 {/if}

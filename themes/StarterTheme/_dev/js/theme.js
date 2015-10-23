@@ -1,6 +1,4 @@
 import $ from 'jquery';
-import './setup-rivets';
-import './checkout';
 
 import prestashop from 'prestashop';
 import EventEmitter from 'events';
@@ -9,6 +7,10 @@ import EventEmitter from 'events';
 for (var i in EventEmitter.prototype) {
     prestashop[i] = EventEmitter.prototype[i];
 }
+
+import './setup-rivets';
+import './checkout';
+import './product-navigation';
 
 $(document).ready(() => {
     $('.ps-shown-by-js').show();
