@@ -12,6 +12,7 @@ class Filter
     public function setLabel($label)
     {
         $this->label = $label;
+
         return $this;
     }
 
@@ -23,6 +24,7 @@ class Filter
     public function setCondition($condition)
     {
         $this->condition = $condition;
+
         return $this;
     }
 
@@ -34,6 +36,7 @@ class Filter
     public function setEnabled($enabled = true)
     {
         $this->enabled = $enabled;
+
         return $this;
     }
 
@@ -60,6 +63,7 @@ class Filter
     public function setMagnitude($magnitude)
     {
         $this->magnitude = $magnitude;
+
         return $this;
     }
 

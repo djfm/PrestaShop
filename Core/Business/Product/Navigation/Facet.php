@@ -16,6 +16,7 @@ class Facet
     {
         $this->filters[] = $filter;
         $this->filtersByIdentifier[$filter->getIdentifier()] = $filter;
+
         return $this;
     }
 
@@ -23,6 +24,7 @@ class Facet
     {
         $this->filters = [];
         $this->filtersByIdentifier = [];
+
         return $this;
     }
 
@@ -34,6 +36,7 @@ class Facet
     public function setLabel($label)
     {
         $this->label = $label;
+
         return $this;
     }
 
@@ -45,6 +48,7 @@ class Facet
     public function setIdentifier($identifier)
     {
         $this->identifier = $identifier;
+
         return $this;
     }
 
@@ -56,6 +60,7 @@ class Facet
     public function hide($hidden = true)
     {
         $this->hidden = $hidden;
+
         return $this;
     }
     public function isHidden()
@@ -66,6 +71,7 @@ class Facet
     public function setCondition($condition)
     {
         $this->condition = $condition;
+
         return $this;
     }
 
@@ -84,6 +90,7 @@ class Facet
                 }
             }
         }
+
         return $this;
     }
 
@@ -92,12 +99,14 @@ class Facet
         if (array_key_exists($identifier, $this->filtersByIdentifier)) {
             return $this->filtersByIdentifier[$identifier];
         }
-        return null;
+
+        return;
     }
 
     public function setPosition($position)
     {
         $this->position = $position;
+
         return $this;
     }
 

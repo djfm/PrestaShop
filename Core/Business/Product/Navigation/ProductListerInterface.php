@@ -7,8 +7,9 @@ interface ProductListerInterface
     /**
      * Well, it lists products.
      *
-     * @param  ProductQueryContext $context Holds general query settings, such as shop, language and customer group
-     * @param  ProductQuery    $query
+     * @param ProductQueryContext $context Holds general query settings, such as shop, language and customer group
+     * @param ProductQuery        $query
+     *
      * @return ProductQueryResult
      */
     public function listProducts(
@@ -21,7 +22,6 @@ interface ProductListerInterface
      * deserialize an URL fragment and get a query from it.
      * If ProductLister cannot or won't unserialize it should return null,
      * not throw an exception.
-     *
      */
     public function getQueryFromURLFragment(
         QueryContext $context,

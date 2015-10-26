@@ -82,7 +82,11 @@ class ProductListerTest extends IntegrationTestCase
 
     public function test_available_facets_include_attribute_facets()
     {
-        $facets = $this->lister->getAvailableFacets($this->context, new Query);
+        $facets = $this
+            ->lister
+            ->getQueryTemplate($this->context, new Query)
+            ->getFacets()
+        ;
 
         $expected = ['Category', 'Size', 'Size', 'Color'];
 

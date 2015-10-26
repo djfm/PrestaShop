@@ -11,6 +11,7 @@ class QueryContext
     public function setShopId($shopId)
     {
         $this->shopId = $shopId;
+
         return $this;
     }
 
@@ -22,6 +23,7 @@ class QueryContext
     public function setLanguageId($languageId)
     {
         $this->languageId = $languageId;
+
         return $this;
     }
 
@@ -33,6 +35,7 @@ class QueryContext
     public function setCustomerGroupId($customerGroupId)
     {
         $this->customerGroupId = $customerGroupId;
+
         return $this;
     }
 

@@ -4,6 +4,7 @@ namespace PrestaShop\PrestaShop\Tests\Integration\Core\Business\Product\Navigati
 
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\QueryURLSerializer;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Query;
+use PrestaShop\PrestaShop\Core\Business\Product\Navigation\DatabaseQuery;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Facet;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\Filter;
 use PrestaShop\PrestaShop\Core\Business\Product\Navigation\ProductLister;
@@ -16,6 +17,7 @@ use Phake;
 class QueryURLSerializerTest extends IntegrationTestCase
 {
     private $serializer;
+    private $productLister;
     private $context;
     private $db;
 
@@ -29,6 +31,10 @@ class QueryURLSerializerTest extends IntegrationTestCase
 
         $this->db = Adapter_ServiceLocator::get(
             'PrestaShop\PrestaShop\Core\Foundation\Database\AutoPrefixingDatabase'
+        );
+
+        $this->productLister = Adapter_ServiceLocator::get(
+            'PrestaShop\PrestaShop\Core\Business\Product\Navigation\ProductLister'
         );
 
         $psContext = Context::getContext();
@@ -47,7 +53,8 @@ class QueryURLSerializerTest extends IntegrationTestCase
 
     private function getQueryFromURLFragment($fragment, Query $defaultQuery)
     {
-        return $this->serializer->getQueryFromURLFragment($this->context, $defaultQuery, $fragment);
+        $query = $this->productLister->getQueryTemplate($this->context, $defaultQuery);
+        return $this->serializer->getQueryFromURLFragment($this->context, $query, $fragment);
     }
 
     private function getFiltersIdentifiers(Query $query)
@@ -63,7 +70,7 @@ class QueryURLSerializerTest extends IntegrationTestCase
         return $identifiers;
     }
 
-    private function doTest($expectedFragment, Query $query, Query $defaultQuery)
+    private function doTest($expectedFragment, Query $query)
     {
         $this->assertEquals(
             $expectedFragment,
@@ -73,7 +80,7 @@ class QueryURLSerializerTest extends IntegrationTestCase
 
         $unserializedQuery = $this->getQueryFromURLFragment(
             $expectedFragment,
-            $defaultQuery
+            new Query
         );
 
         $this->assertEquals(
@@ -95,7 +102,7 @@ class QueryURLSerializerTest extends IntegrationTestCase
         );
         $query->addFacet($facet);
 
-        $this->doTest('Category-Women', $query, new Query);
+        $this->doTest('Category-Women', $query);
     }
 
     public function test_category_facet_with_two_filters_is_serialized()
@@ -115,7 +122,7 @@ class QueryURLSerializerTest extends IntegrationTestCase
         );
         $query->addFacet($facet);
 
-        $this->doTest('Category-Women-Tops', $query, new Query);
+        $this->doTest('Category-Women-Tops', $query);
     }
 
     public function test_disabled_filters_are_not_included_in_url()
@@ -135,7 +142,7 @@ class QueryURLSerializerTest extends IntegrationTestCase
         );
         $query->addFacet($facet);
 
-        $this->doTest('Category-Women', $query, new Query);
+        $this->doTest('Category-Women', $query);
     }
 
     public function test_two_facets_are_serialized()
@@ -164,12 +171,12 @@ class QueryURLSerializerTest extends IntegrationTestCase
             )
         ;
 
-        $this->doTest('Category-Women-Tops/Color-Black', $query, new Query);
+        $this->doTest('Category-Women-Tops/Color-Black', $query);
     }
 
     public function test_two_ambiguous_facets_are_serialized()
     {
-        $query = (new Query)
+        $query = (new DatabaseQuery($this->db, $this->context))
             ->addFacet((new Facet)
                 ->setLabel('Category')
                 ->setIdentifier('categories')
@@ -190,19 +197,13 @@ class QueryURLSerializerTest extends IntegrationTestCase
             )
         ;
 
-        $productLister = Phake::partialMock(
+        $this->productLister = Phake::partialMock(
             'PrestaShop\PrestaShop\Core\Business\Product\Navigation\ProductLister',
             $this->db
         );
 
+        Phake::when($this->productLister)->getQueryTemplate(Phake::anyParameters())->thenReturn($query);
 
-        Phake::when($productLister)
-            ->getAvailableFacets(Phake::anyParameters())
-            ->thenReturn($query->getFacets())
-        ;
-
-        $this->serializer = new QueryURLSerializer($this->db, $productLister);
-
-        $this->doTest('Category-Women/Category---Tops', $query, new Query);
+        $this->doTest('Category-Women/Category---Tops', $query);
     }
 }

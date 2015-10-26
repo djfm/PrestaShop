@@ -6,31 +6,36 @@ class PaginationResult
 {
     /**
      * The total number of pages for this query.
+     *
      * @var int
      */
     private $pagesCount;
 
     /**
-     * The number of results actually retruned
+     * The number of results actually retruned.
+     *
      * @var int
      */
     private $resultsCount;
 
     /**
-     * The total number of results
+     * The total number of results.
+     *
      * @var int
      */
     private $totalResultsCount;
 
     /**
      * The index of the returned page.
+     *
      * @var int
      */
     private $page;
 
     public function setPagesCount($pagesCount)
     {
-        $this->pagesCount = (int)$pagesCount;
+        $this->pagesCount = (int) $pagesCount;
+
         return $this;
     }
 
@@ -42,6 +47,7 @@ class PaginationResult
     public function setTotalResultsCount($totalResultsCount)
     {
         $this->totalResultsCount = $totalResultsCount;
+
         return $this;
     }
 
@@ -52,7 +58,8 @@ class PaginationResult
 
     public function setResultsCount($resultsCount)
     {
-        $this->resultsCount = (int)$resultsCount;
+        $this->resultsCount = (int) $resultsCount;
+
         return $this;
     }
 
@@ -63,7 +70,8 @@ class PaginationResult
 
     public function setPage($page)
     {
-        $this->page = (int)$page;
+        $this->page = (int) $page;
+
         return $this;
     }
 
@@ -75,11 +83,12 @@ class PaginationResult
     private function buildPageLink($page, $type = 'page')
     {
         $current = $page === $this->getPage();
+
         return [
             'type' => $type,
             'page' => $page,
             'clickable' => !$current,
-            'current' => $type === 'page' ? $current : false
+            'current' => $type === 'page' ? $current : false,
         ];
     }
 
@@ -89,7 +98,7 @@ class PaginationResult
             'type' => 'spacer',
             'page' => null,
             'clickable' => false,
-            'current' => false
+            'current' => false,
         ];
     }
 
@@ -124,7 +133,7 @@ class PaginationResult
             $addPageLink(1 + $i);
         }
 
-        $start = max(1, $this->getPage() - (int)floor(($pageContextLength - 1) / 2));
+        $start = max(1, $this->getPage() - (int) floor(($pageContextLength - 1) / 2));
         if ($start + $pageContextLength > $this->getPagesCount()) {
             $start = $this->getPagesCount() - $pageContextLength + 1;
         }

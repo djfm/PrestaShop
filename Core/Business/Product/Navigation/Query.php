@@ -10,12 +10,33 @@ class Query
 
     public function __construct()
     {
-        $this->pagination = new PaginationQuery;
+        $this->pagination = new PaginationQuery();
+    }
+
+    public function withoutFacet($identifier)
+    {
+        $query = clone $this;
+        $query->clearFacets();
+        foreach ($this->getFacets() as $facet) {
+            if ($facet->getIdentifier() !== $identifier) {
+                $query->addFacet(clone $facet);
+            }
+        }
+
+        return $query;
     }
 
     public function addFacet(Facet $facet)
     {
         $this->facets[] = $facet;
+
+        return $this;
+    }
+
+    public function clearFacets()
+    {
+        $this->facets = [];
+
         return $this;
     }
 
@@ -31,30 +52,14 @@ class Query
                 return $facet;
             }
         }
-        return null;
-    }
 
-    public function withoutFacet($identifier)
-    {
-        $query = new Query;
-        foreach ($this->getFacets() as $facet) {
-            $add = false;
-            if (is_string($identifier)) {
-                $add = $facet->getIdentifier() !== $identifier;
-            } else {
-                $add = !$identifier($facet->getIdentifier());
-            }
-
-            if ($add) {
-                $query->addFacet(clone $facet);
-            }
-        }
-        return $query;
+        return;
     }
 
     public function setPagination(PaginationQuery $pagination)
     {
         $this->pagination = $pagination;
+
         return $this;
     }
 
@@ -63,9 +68,10 @@ class Query
         return $this->pagination;
     }
 
-    public function setSortOption(SortOption $sortOption)
+    public function setSortOption(SortOption $sortOption = null)
     {
         $this->sortOption = $sortOption;
+
         return $this;
     }
 
@@ -79,6 +85,7 @@ class Query
         usort($this->facets, function (Facet $a, Facet $b) {
             return $a->getPosition() - $b->getPosition();
         });
+
         return $this;
     }
 }

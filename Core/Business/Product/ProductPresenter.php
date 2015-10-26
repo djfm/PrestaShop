@@ -2,13 +2,10 @@
 
 namespace PrestaShop\PrestaShop\Core\Business\Product;
 
-use Adapter_ObjectSerializer;
 use Adapter_ImageRetriever;
 use Adapter_PricePresenter;
-use Adapter_ProductPriceCalculator;
 use Adapter_ProductColorsRetriever;
 use Adapter_Translator;
-use PrestaShop\PrestaShop\Core\Business\Price\PricePresenterInterface;
 use Product;
 use Language;
 use Link;
@@ -84,7 +81,7 @@ class ProductPresenter
             $presentedProduct['has_discount'] = true;
             $presentedProduct['discount_type'] = $product['specific_prices']['reduction_type'];
             // TODO: format according to locale preferences
-            $presentedProduct['discount_percentage'] = -round(100 * $product['specific_prices']['reduction'])."%";
+            $presentedProduct['discount_percentage'] = -round(100 * $product['specific_prices']['reduction']).'%';
             $regular_price = $product['price_without_reduction'];
         }
 
@@ -164,10 +161,10 @@ class ProductPresenter
         }
 
         $presentedProduct['main_variants'] = array_map(function (array $color) use ($language) {
-            $color['add_to_cart_url']   = $this->getAddToCartURL($color);
-            $color['url']               = $this->getProductURL($color, $language);
-            $color['type']              = 'color';
-            $color['html_color_code']   = $color['color'];
+            $color['add_to_cart_url'] = $this->getAddToCartURL($color);
+            $color['url'] = $this->getProductURL($color, $language);
+            $color['type'] = 'color';
+            $color['html_color_code'] = $color['color'];
             unset($color['color']);
             unset($color['id_attribute']); // because what is a template supposed to do with it?
 
@@ -189,28 +186,28 @@ class ProductPresenter
         if ($show_price && $product['online_only']) {
             $labels['online-only'] = [
                 'type' => 'online-only',
-                'label' => $this->translator->l('Online only', 'Product')
+                'label' => $this->translator->l('Online only', 'Product'),
             ];
         }
 
         if ($show_price && $product['on_sale'] && !$settings->catalog_mode) {
             $labels['on-sale'] = [
                 'type' => 'on-sale',
-                'label' => $this->translator->l('On sale!', 'Product')
+                'label' => $this->translator->l('On sale!', 'Product'),
             ];
         }
 
         if ($show_price && $product['reduction'] && !$settings->catalog_mode && !$product['on_sale']) {
             $labels['discount'] = [
                 'type' => 'discount',
-                'label' => $this->translator->l('Reduced price', 'Product')
+                'label' => $this->translator->l('Reduced price', 'Product'),
             ];
         }
 
         if ($product['new']) {
             $labels['new'] = [
                 'type' => 'new',
-                'label' => $this->translator->l('New', 'Product')
+                'label' => $this->translator->l('New', 'Product'),
             ];
         }
 

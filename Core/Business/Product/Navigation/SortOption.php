@@ -20,6 +20,7 @@ class SortOption
     public function setLabel($label)
     {
         $this->label = $label;
+
         return $this;
     }
 
@@ -34,6 +35,7 @@ class SortOption
             throw new Exception('Invalid fieldName for SortOption.');
         }
         $this->fieldName = $fieldName;
+
         return $this;
     }
 
@@ -48,6 +50,7 @@ class SortOption
             throw new Exception('Invalid sortOrder for SortOption.');
         }
         $this->sortOrder = $sortOrder;
+
         return $this;
     }
 
@@ -61,7 +64,7 @@ class SortOption
         return [
             'fieldName' => $this->getFieldName(),
             'sortOrder' => $this->getSortOrder(),
-            'label'     => $this->getLabel()
+            'label' => $this->getLabel(),
         ];
     }
 

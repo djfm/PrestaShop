@@ -6,18 +6,21 @@ class QueryResult
 {
     /**
      * The products found.
+     *
      * @var array
      */
     private $products = [];
 
     /**
      * Next potential query.
+     *
      * @var ProductQuery
      */
     private $updatedFilters;
 
     /**
-     * Available sort options
+     * Available sort options.
+     *
      * @var array of SortOption
      */
     private $sortOptions = [];
@@ -28,19 +31,21 @@ class QueryResult
     private $paginationResult;
 
     /**
-     * The URL fragment for SEO friendly URLs
+     * The URL fragment for SEO friendly URLs.
+     *
      * @var string
      */
     private $urlFragment;
 
     public function __construct()
     {
-        $this->paginationResult = new PaginationResult;
+        $this->paginationResult = new PaginationResult();
     }
 
     public function setProducts(array $products)
     {
         $this->products = $products;
+
         return $this;
     }
 
@@ -52,6 +57,7 @@ class QueryResult
     public function setUpdatedFilters(Query $updatedFilters)
     {
         $this->updatedFilters = $updatedFilters;
+
         return $this;
     }
 
@@ -64,6 +70,7 @@ class QueryResult
     {
         $this->sortOptions = [];
         array_map([$this, 'addSortOption'], $sortOptions);
+
         return $this;
     }
 
@@ -75,12 +82,14 @@ class QueryResult
     public function addSortOption(SortOption $option)
     {
         $this->sortOptions[] = $option;
+
         return $this;
     }
 
     public function setPaginationResult(PaginationResult $paginationResult)
     {
         $this->paginationResult = $paginationResult;
+
         return $this;
     }
 
@@ -92,6 +101,7 @@ class QueryResult
     public function setURLFragment($urlFragment)
     {
         $this->urlFragment = $urlFragment;
+
         return $this;
     }
 
