@@ -37,7 +37,7 @@ class SupplierFacet extends AbstractDatabaseFacet
             null
         ;
         if ($id_supplier) {
-            $queryParts['where']   .= ' AND supplier.id_supplier != '.$id_supplier;
+            $queryParts['from']   .= ' AND supplier.id_supplier != '.$id_supplier;
         }
 
         return $queryParts;
