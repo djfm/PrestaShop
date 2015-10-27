@@ -94,9 +94,8 @@ class ProductLister implements ProductListerInterface
 
     private function buildUpdatedFilters(
         QueryContext $context,
-        DatabaseQuery $initialQuery
+        DatabaseQuery $query
     ) {
-        $query = $this->getQueryTemplate($context, $initialQuery);
         $updatedFilters = new Query();
 
         foreach ($query->getFacets() as $facet) {
