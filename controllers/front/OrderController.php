@@ -145,7 +145,7 @@ class OrderControllerCore extends FrontController
 
     public function initContent()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && $this->ajax) {
+        if (Tools::getValue('action') === 'renderCartSummary') {
             die($this->jsonRenderCartSummary());
         }
 
